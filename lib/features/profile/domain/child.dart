@@ -1,0 +1,65 @@
+import 'package:flutter/foundation.dart';
+
+/// Géneros posibles para el perfil del niño/a
+enum Gender { male, female, other }
+
+/// Entidad que representa a un Niño/a en el sistema.
+/// Esta es la clase central que usaremos para filtrar recetas y alertas.
+class Child {
+  final String id;
+  final String name;
+  final DateTime birthDate;
+  final Gender gender;
+
+  Child({
+    required this.id,
+    required this.name,
+    required this.birthDate,
+    required this.gender,
+  });
+
+  // ==========================================================
+  // LÓGICA DE NEGOCIO (Domain Logic)
+  // ==========================================================
+
+  /// Calcula la edad total en meses. 
+  /// Es vital para los filtros de nutrición (ej: 6-8 meses).
+  int get ageInMonths {
+    final now = DateTime.now();
+    int months = (now.year - birthDate.year) * 12 + now.month - birthDate.month;
+    
+    // Ajuste si el día actual es menor al día de nacimiento
+    if (now.day < birthDate.day) {
+      months--;
+    }
+    return months;
+  }
+
+  /// Calcula la edad en años para niños más grandes.
+  int get ageInYears => ageInMonths ~/ 12;
+
+  /// Devuelve una cadena amigable con la edad (ej: "8 meses" o "5 años, 2 meses")
+  String get formattedAge {
+    final months = ageInMonths;
+    if (months < 12) {
+      return '$months meses';
+    } else {
+      final years = ageInYears;
+      final remainingMonths = months % 12;
+      return remainingMonths == 0 
+          ? '$years años' 
+          : '$years años y $remainingMonths meses';
+    }
+  }
+
+  /// Determina la categoría de nutrición basada en la edad.
+  /// Esto replica la lógica de la app ALMA del MINSA.
+  String get nutritionCategory {
+    final months = ageInMonths;
+    if (months < 6) return 'Lactancia Exclusiva';
+    if (months >= 6 && months <= 8) return '6 a 8 meses (Papillas)';
+    if (months >= 9 && months <= 11) return '9 a 11 meses (Picados)';
+    if (months >= 12 && months <= 23) return '12 a 23 meses (Olla familiar)';
+    return 'Escolar (Alimentación completa)';
+  }
+}
