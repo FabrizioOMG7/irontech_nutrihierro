@@ -21,7 +21,7 @@ class ProfileRepositoryMock implements ProfileRepository {
   @override
   Future<List<Child>> getChildren() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return _memoryDb;
+    return List<Child>.unmodifiable(_memoryDb);
   }
 
   @override

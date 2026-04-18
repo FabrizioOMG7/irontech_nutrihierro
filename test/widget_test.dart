@@ -10,7 +10,7 @@ void main() {
       ),
     );
 
-    // Verificamos que la ruta inicial '/' muestra el texto correcto
-    expect(find.text('Cargando Perfil...'), findsOneWidget);
+    // Verificamos que la ruta inicial de registro cargue correctamente
+    expect(find.text('Registrar Niño/a'), findsOneWidget);
   });
 }
