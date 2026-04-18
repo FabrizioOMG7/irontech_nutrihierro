@@ -17,11 +17,13 @@ class TrackingRepositoryMock implements TrackingRepository {
   Future<List<DailyRecord>> getRecordsForChildInMonth(String childId, int month, int year) async {
     await Future.delayed(const Duration(milliseconds: 300));
     // Filtramos para devolver solo los registros de ese niño en ese mes y año específico
-    return _memoryDb.where((r) => 
-      r.childId == childId && 
-      r.date.month == month && 
-      r.date.year == year
-    ).toList();
+    return List<DailyRecord>.unmodifiable(
+      _memoryDb.where((r) => 
+        r.childId == childId && 
+        r.date.month == month && 
+        r.date.year == year
+      ),
+    );
   }
 
   @override
