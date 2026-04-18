@@ -44,7 +44,7 @@ void main() {
         gender: Gender.female,
       );
 
-      expect(child.formattedAge, '1 años y 2 meses');
+      expect(child.formattedAge, '1 año y 2 meses');
     });
 
     test('nutritionCategory follows expected age boundaries', () {
