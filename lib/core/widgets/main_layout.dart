@@ -37,6 +37,10 @@ class MainLayout extends StatelessWidget {
             icon: Icon(Icons.settings),
             label: 'Ajustes',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month),
+            label: 'Registro',
+          ),
         ],
       ),
     );

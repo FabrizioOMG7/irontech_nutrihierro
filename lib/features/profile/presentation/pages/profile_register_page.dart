@@ -18,6 +18,12 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
   DateTime? _selectedDate;
   Gender _selectedGender = Gender.male;
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
   // Función para mostrar el calendario
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
