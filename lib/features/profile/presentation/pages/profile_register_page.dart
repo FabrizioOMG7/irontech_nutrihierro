@@ -89,6 +89,7 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
               ),
               const SizedBox(height: AppSpacing.md),
               const Text('Género', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: AppSpacing.sm),
               _GenderSelector(
                 selectedGender: _selectedGender,
                 onChanged: (value) => setState(() => _selectedGender = value),
@@ -148,17 +149,20 @@ class _GenderSelector extends StatelessWidget {
       runSpacing: AppSpacing.sm,
       children: [
         ChoiceChip(
-          label: const Text('M'),
+          label: const Text('Masculino'),
+          labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           selected: selectedGender == Gender.male,
           onSelected: (_) => onChanged(Gender.male),
         ),
         ChoiceChip(
-          label: const Text('F'),
+          label: const Text('Femenino'),
+          labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           selected: selectedGender == Gender.female,
           onSelected: (_) => onChanged(Gender.female),
         ),
         ChoiceChip(
           label: const Text('Otro'),
+          labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           selected: selectedGender == Gender.other,
           onSelected: (_) => onChanged(Gender.other),
         ),

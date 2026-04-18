@@ -31,12 +31,13 @@ class NutritionPage extends ConsumerWidget {
       body: AsyncValueView(
         value: ref.watch(childrenListProvider),
         errorPrefix: 'Error al cargar perfil',
+        loadingMessage: 'Cargando perfiles...',
         dataBuilder: (children) {
           if (children.isEmpty) {
             return const EmptyStateView(
               icon: Icons.child_care,
-              title: 'No hay niños registrados',
-              message: 'Registra primero un perfil para ver recomendaciones personalizadas.',
+              title: 'Primero registra un perfil',
+              message: 'Ve al registro de niño/a para activar recomendaciones personalizadas.',
             );
           }
           final child = children.first;
@@ -56,12 +57,13 @@ class NutritionPage extends ConsumerWidget {
                   child: AsyncValueView(
                     value: ref.watch(recipesByCategoryProvider(category)),
                     errorPrefix: 'Error al cargar recetas',
+                    loadingMessage: 'Buscando recetas recomendadas...',
                     dataBuilder: (recipes) {
                       if (recipes.isEmpty) {
                         return const EmptyStateView(
                           icon: Icons.restaurant,
                           title: 'Sin recetas disponibles',
-                          message: 'No hay recetas para esta etapa en este momento.',
+                          message: 'Intenta más tarde o ajusta el perfil para obtener nuevas sugerencias.',
                         );
                       }
                       return ListView.builder(

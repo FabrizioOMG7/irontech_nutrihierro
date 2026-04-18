@@ -30,5 +30,5 @@ class AppRadius {
 
 class AppBreakpoints {
   static const double tablet = 768;
-  static const double maxContentWidth = 840;
+  static const double maxContentWidth = 760;
 }

@@ -17,18 +17,38 @@ class TrackingPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final childrenAsync = ref.watch(childrenListProvider);
+    final trackingState = ref.watch(trackingControllerProvider);
+
+    ref.listen<AsyncValue<void>>(trackingControllerProvider, (previous, next) {
+      if (previous?.isLoading == true && next.hasValue) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registro guardado correctamente.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else if (next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No se pudo guardar el registro: ${next.error}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('Registro Diario')),
       body: AsyncValueView(
         value: childrenAsync,
         errorPrefix: 'Error al cargar perfil',
+        loadingMessage: 'Cargando perfiles...',
         dataBuilder: (children) {
           if (children.isEmpty) {
             return const EmptyStateView(
               icon: Icons.child_care,
-              title: 'Registra un niño primero',
-              message: 'Necesitamos un perfil para asociar el seguimiento diario.',
+              title: 'Necesitas un perfil para iniciar',
+              message: 'Registra un niño/a y vuelve aquí para empezar el seguimiento diario.',
             );
           }
 
@@ -58,12 +78,13 @@ class TrackingPage extends ConsumerWidget {
                   child: AsyncValueView(
                     value: ref.watch(monthlyRecordsProvider(query)),
                     errorPrefix: 'Error al cargar registro',
+                    loadingMessage: 'Cargando historial del mes...',
                     dataBuilder: (records) {
                       if (records.isEmpty) {
                         return const EmptyStateView(
                           icon: Icons.calendar_month,
                           title: 'Sin registros este mes',
-                          message: 'Toca el botón "Registrar hoy" para empezar el seguimiento.',
+                          message: 'Usa "Registrar hoy" para guardar la primera ingesta del mes.',
                         );
                       }
                       return ListView.builder(
@@ -82,7 +103,7 @@ class TrackingPage extends ConsumerWidget {
         data: (children) {
           if (children.isEmpty) return null;
           return FloatingActionButton.extended(
-            onPressed: () {
+            onPressed: trackingState.isLoading ? null : () {
               final newRecord = DailyRecord(
                 id: const Uuid().v4(),
                 childId: children.first.id,
@@ -93,7 +114,7 @@ class TrackingPage extends ConsumerWidget {
               ref.read(trackingControllerProvider.notifier).addRecord(newRecord);
             },
             icon: const Icon(Icons.add),
-            label: const Text('Registrar hoy'),
+            label: Text(trackingState.isLoading ? 'Guardando...' : 'Registrar hoy'),
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
           );
@@ -113,6 +134,7 @@ class _RecordTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
+        minVerticalPadding: AppSpacing.sm,
         leading: Icon(
           record.sourceType == IronSourceType.food ? Icons.restaurant : Icons.local_hospital,
           color: AppColors.primary,
