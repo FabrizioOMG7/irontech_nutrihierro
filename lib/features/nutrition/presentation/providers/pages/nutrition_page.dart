@@ -137,7 +137,7 @@ class _IronBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Text(
-        '$ironContent mg hierro',
+        '$ironContent mg de hierro',
         style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
       ),
     );

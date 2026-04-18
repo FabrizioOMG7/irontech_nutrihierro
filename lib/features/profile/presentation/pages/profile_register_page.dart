@@ -47,7 +47,6 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
 
       await ref.read(childrenListProvider.notifier).addChild(newChild);
       if (mounted) context.go('/home');
-      return;
     }
 
     if (_selectedDate == null) {
