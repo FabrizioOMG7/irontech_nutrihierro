@@ -37,7 +37,14 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
   }
 
   Future<void> _saveForm() async {
-    if (_formKey.currentState!.validate() && _selectedDate != null) {
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, selecciona la fecha de nacimiento')),
+      );
+      return;
+    }
+
+    if (_formKey.currentState!.validate()) {
       final newChild = Child(
         id: const Uuid().v4(),
         name: _nameController.text.trim(),
@@ -47,12 +54,6 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
 
       await ref.read(childrenListProvider.notifier).addChild(newChild);
       if (mounted) context.go('/home');
-    }
-
-    if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, selecciona la fecha de nacimiento')),
-      );
     }
   }
 
