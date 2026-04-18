@@ -46,9 +46,10 @@ class Child {
     } else {
       final years = ageInYears;
       final remainingMonths = months % 12;
+      final yearsLabel = years == 1 ? 'año' : 'años';
       return remainingMonths == 0 
-          ? '$years años' 
-          : '$years años y $remainingMonths meses';
+          ? '$years $yearsLabel'
+          : '$years $yearsLabel y $remainingMonths meses';
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_record.dart';
+import 'package:irontech_nutrihierro/features/tracking/domain/monthly_records_query.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/tracking_repository.dart';
 
 
@@ -14,14 +15,14 @@ class TrackingRepositoryMock implements TrackingRepository {
   }
 
   @override
-  Future<List<DailyRecord>> getRecordsForChildInMonth(String childId, int month, int year) async {
+  Future<List<DailyRecord>> getRecordsForChildInMonth(MonthlyRecordsQuery query) async {
     await Future.delayed(const Duration(milliseconds: 300));
     // Filtramos para devolver solo los registros de ese niño en ese mes y año específico
     return List<DailyRecord>.unmodifiable(
       _memoryDb.where((r) => 
-        r.childId == childId && 
-        r.date.month == month && 
-        r.date.year == year
+        r.childId == query.childId && 
+        r.date.month == query.month && 
+        r.date.year == query.year
       ),
     );
   }
