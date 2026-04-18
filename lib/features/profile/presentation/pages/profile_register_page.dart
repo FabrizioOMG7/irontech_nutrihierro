@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart'; // Para generar IDs únicos
+import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
+import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
+import 'package:uuid/uuid.dart';
 import '../../domain/child.dart';
 import '../providers/profile_provider.dart';
 
@@ -24,7 +26,6 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
     super.dispose();
   }
 
-  // Función para mostrar el calendario
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -35,23 +36,21 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  void _saveForm() async {
+  Future<void> _saveForm() async {
     if (_formKey.currentState!.validate() && _selectedDate != null) {
-      // 1. Creamos el objeto Child (Entidad de Dominio)
       final newChild = Child(
-        id: const Uuid().v4(), // Generamos un ID único
+        id: const Uuid().v4(),
         name: _nameController.text.trim(),
         birthDate: _selectedDate!,
         gender: _selectedGender,
       );
 
-      // 2. Usamos el Provider para guardarlo (Inversión de Dependencia)
-      // La pantalla no sabe que esto va a Firebase, solo confía en el Provider.
       await ref.read(childrenListProvider.notifier).addChild(newChild);
-
-      // 3. Navegamos al Home una vez guardado
       if (mounted) context.go('/home');
-    } else if (_selectedDate == null) {
+      return;
+    }
+
+    if (_selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor, selecciona la fecha de nacimiento')),
       );
@@ -60,84 +59,110 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Registrar Niño/a')),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      body: ResponsiveContent(
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              const Text(
-                '¡Bienvenido a IronTech! 👋',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Text('¡Bienvenido a IronTech! 👋', style: theme.textTheme.headlineSmall),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Registra los datos de tu pequeño/a para personalizar la nutrición.',
+                style: theme.textTheme.bodyMedium,
               ),
-              const SizedBox(height: 10),
-              const Text('Empecemos registrando los datos de tu pequeño/a para personalizar su nutrición.'),
-              const SizedBox(height: 30),
-
-              // Campo de Nombre
+              const SizedBox(height: AppSpacing.lg),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nombre del niño/a',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+                  prefixIcon: Icon(Icons.person_outline),
                 ),
                 validator: (value) => value == null || value.isEmpty ? 'Ingresa un nombre' : null,
               ),
-              const SizedBox(height: 20),
-
-              // Selector de Fecha
-              ListTile(
-                tileColor: Colors.grey[100],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                leading: const Icon(Icons.calendar_today),
-                title: Text(_selectedDate == null 
-                    ? 'Fecha de nacimiento' 
-                    : 'Nació el: ${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'),
-                trailing: const Icon(Icons.arrow_drop_down),
+              const SizedBox(height: AppSpacing.md),
+              _BirthDateTile(
+                selectedDate: _selectedDate,
                 onTap: _pickDate,
               ),
-              const SizedBox(height: 20),
-
-              // Selector de Género
-              const Text('Género:', style: TextStyle(fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Expanded(
-                    child: RadioListTile<Gender>(
-                      title: const Text('M'),
-                      value: Gender.male,
-                      groupValue: _selectedGender,
-                      onChanged: (val) => setState(() => _selectedGender = val!),
-                    ),
-                  ),
-                  Expanded(
-                    child: RadioListTile<Gender>(
-                      title: const Text('F'),
-                      value: Gender.female,
-                      groupValue: _selectedGender,
-                      onChanged: (val) => setState(() => _selectedGender = val!),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: AppSpacing.md),
+              const Text('Género', style: TextStyle(fontWeight: FontWeight.w600)),
+              _GenderSelector(
+                selectedGender: _selectedGender,
+                onChanged: (value) => setState(() => _selectedGender = value),
               ),
-              const SizedBox(height: 40),
-
-              // Botón de Guardar
+              const SizedBox(height: AppSpacing.xl),
               ElevatedButton(
                 onPressed: _saveForm,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: const Text('Guardar Perfil', style: TextStyle(fontSize: 18)),
+                child: const Text('Guardar perfil'),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BirthDateTile extends StatelessWidget {
+  final DateTime? selectedDate;
+  final VoidCallback onTap;
+
+  const _BirthDateTile({
+    required this.selectedDate,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final label = selectedDate == null
+        ? 'Fecha de nacimiento'
+        : 'Nació el: ${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}';
+
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.calendar_today_outlined),
+        title: Text(label),
+        trailing: const Icon(Icons.arrow_drop_down),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+class _GenderSelector extends StatelessWidget {
+  final Gender selectedGender;
+  final ValueChanged<Gender> onChanged;
+
+  const _GenderSelector({
+    required this.selectedGender,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        ChoiceChip(
+          label: const Text('M'),
+          selected: selectedGender == Gender.male,
+          onSelected: (_) => onChanged(Gender.male),
+        ),
+        ChoiceChip(
+          label: const Text('F'),
+          selected: selectedGender == Gender.female,
+          onSelected: (_) => onChanged(Gender.female),
+        ),
+        ChoiceChip(
+          label: const Text('Otro'),
+          selected: selectedGender == Gender.other,
+          onSelected: (_) => onChanged(Gender.other),
+        ),
+      ],
     );
   }
 }

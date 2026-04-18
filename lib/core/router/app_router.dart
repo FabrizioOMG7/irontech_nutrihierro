@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/pages/nutrition_page.dart';
+import 'package:irontech_nutrihierro/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/tracking_page.dart';
 
 // Importamos tus pantallas y el layout
@@ -40,11 +41,7 @@ final appRouterByAgeProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile-settings',
-                builder: (context, state) => const Scaffold(
-                  body: Center(
-                    child: Text('Aquí irá la configuración del niño, cambiar nombre, etc.'),
-                  ),
-                ),
+                builder: (context, state) => const ProfileSettingsPage(),
               ),
             ],
           ),

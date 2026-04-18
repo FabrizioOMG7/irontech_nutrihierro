@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/features/tracking/data/tracking_repository_mock.dart';
 import '../../domain/daily_record.dart';
+import '../../domain/monthly_records_query.dart';
 import '../../domain/tracking_repository.dart';
 
 // 1. Proveemos el repositorio (Con el Switch Mágico preparado para Firebase)
@@ -10,13 +11,9 @@ final trackingRepositoryProvider = Provider<TrackingRepository>((ref) {
 
 // 2. Proveedor para leer los registros de un mes específico.
 // Usamos "family" porque necesitamos pasarle 3 datos: ID del niño, mes y año.
-final monthlyRecordsProvider = FutureProvider.family<List<DailyRecord>, Map<String, dynamic>>((ref, params) async {
+final monthlyRecordsProvider = FutureProvider.family<List<DailyRecord>, MonthlyRecordsQuery>((ref, query) async {
   final repository = ref.watch(trackingRepositoryProvider);
-  return repository.getRecordsForChildInMonth(
-    params['childId'] as String,
-    params['month'] as int,
-    params['year'] as int,
-  );
+  return repository.getRecordsForChildInMonth(query);
 });
 
 // 3. Notifier para guardar nuevos registros y refrescar el calendario
