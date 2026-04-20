@@ -17,6 +17,19 @@ void main() {
       expect(updatedAlerts.first.isRead, isTrue);
     });
 
+    test('ensureDailyAlerts does not duplicate same date/type alerts', () {
+      final notifier = AlertsNotifier(
+        nowProvider: () => DateTime(2026, 4, 20, 10),
+      );
+
+      final initialCount = notifier.state.length;
+      notifier.ensureDailyAlerts();
+      final secondCount = notifier.state.length;
+
+      expect(initialCount, 2);
+      expect(secondCount, 2);
+    });
+
     test('clearRead removes only read alerts', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);

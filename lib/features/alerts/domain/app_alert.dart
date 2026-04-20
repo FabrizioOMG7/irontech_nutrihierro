@@ -1,5 +1,11 @@
+enum AppAlertType {
+  ironIntakeReminder,
+  nutritionTip,
+}
+
 class AppAlert {
   final String id;
+  final AppAlertType type;
   final String title;
   final String message;
   final DateTime createdAt;
@@ -7,6 +13,7 @@ class AppAlert {
 
   const AppAlert({
     required this.id,
+    this.type = AppAlertType.ironIntakeReminder,
     required this.title,
     required this.message,
     required this.createdAt,
@@ -15,6 +22,7 @@ class AppAlert {
 
   AppAlert copyWith({
     String? id,
+    AppAlertType? type,
     String? title,
     String? message,
     DateTime? createdAt,
@@ -22,6 +30,7 @@ class AppAlert {
   }) {
     return AppAlert(
       id: id ?? this.id,
+      type: type ?? this.type,
       title: title ?? this.title,
       message: message ?? this.message,
       createdAt: createdAt ?? this.createdAt,

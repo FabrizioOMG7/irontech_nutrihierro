@@ -1,17 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
+import 'package:irontech_nutrihierro/core/utils/date_formatters.dart';
 import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_record.dart';
-import 'package:irontech_nutrihierro/features/tracking/domain/monthly_records_query.dart';
+import 'package:irontech_nutrihierro/features/tracking/domain/daily_records_query.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:uuid/uuid.dart';
 
-class TrackingPage extends ConsumerWidget {
+class TrackingPage extends ConsumerStatefulWidget {
   const TrackingPage({super.key});
+
+  @override
+  ConsumerState<TrackingPage> createState() => _TrackingPageState();
+}
+
+class _TrackingPageState extends ConsumerState<TrackingPage> {
+  DateTime _historyDate = DateTime.now();
+
+  Future<void> _pickHistoryDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _historyDate,
+      firstDate: DateTime(now.year - 1, 1, 1),
+      lastDate: now,
+    );
+
+    if (picked != null) {
+      setState(() => _historyDate = picked);
+    }
+  }
 
   Future<void> _openRecordForm(
     BuildContext context,
@@ -43,7 +65,7 @@ class TrackingPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final childrenAsync = ref.watch(childrenListProvider);
     final trackingState = ref.watch(trackingControllerProvider);
 
@@ -82,12 +104,7 @@ class TrackingPage extends ConsumerWidget {
           }
 
           final child = children.first;
-          final now = DateTime.now();
-          final query = MonthlyRecordsQuery(
-            childId: child.id,
-            month: now.month,
-            year: now.year,
-          );
+          final query = DailyRecordsQuery(childId: child.id, date: _historyDate);
 
           return ResponsiveContent(
             child: Column(
@@ -97,24 +114,38 @@ class TrackingPage extends ConsumerWidget {
                   color: Theme.of(context).colorScheme.primary.withAlpha(15),
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Text(
-                      'Seguimiento de ${child.name}',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Seguimiento de ${child.name}',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          onTap: _pickHistoryDate,
+                          leading: const Icon(Icons.calendar_today_outlined),
+                          title: const Text('Ver historial por fecha'),
+                          subtitle: Text(formatDateDdMmYyyy(_historyDate)),
+                          trailing: const Icon(Icons.arrow_drop_down),
+                        ),
+                      ],
                     ),
                   ),
                 ),
                 Expanded(
                   child: AsyncValueView(
-                    value: ref.watch(monthlyRecordsProvider(query)),
+                    value: ref.watch(dailyRecordsProvider(query)),
                     errorPrefix: 'Error al cargar registro',
-                    loadingMessage: 'Cargando historial del mes...',
+                    loadingMessage: 'Cargando registros de la fecha seleccionada...',
                     dataBuilder: (records) {
                       if (records.isEmpty) {
-                        return const EmptyStateView(
+                        return EmptyStateView(
                           icon: Icons.calendar_month,
-                          title: 'Sin registros este mes',
+                          title: 'Sin registros en ${formatDateDdMmYyyy(_historyDate)}',
                           message:
-                              'Usa "Registrar ingesta" para guardar el primer registro del mes.',
+                              'Usa "Registrar ingesta" para guardar registros y consultarlos por fecha.',
                         );
                       }
                       return ListView.builder(
@@ -173,7 +204,7 @@ class _RecordTile extends StatelessWidget {
         ),
         title: Text(record.description),
         subtitle: Text(
-          '${_formatDate(record.date)} • ${_sourceLabel(record.sourceType)}',
+          '${formatDateDdMmYyyy(record.date)} • ${_sourceLabel(record.sourceType)}',
         ),
         trailing: Icon(
           accepted ? Icons.check_circle : Icons.info_outline,
@@ -182,12 +213,6 @@ class _RecordTile extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatDate(DateTime date) {
-  final day = date.day.toString().padLeft(2, '0');
-  final month = date.month.toString().padLeft(2, '0');
-  return '$day/$month/${date.year}';
 }
 
 String _sourceLabel(IronSourceType sourceType) {
@@ -227,6 +252,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
   DateTime _selectedDate = DateTime.now();
   IronSourceType _selectedSource = IronSourceType.food;
   bool _wasAccepted = true;
+  String? _selectedPresetFoodOption;
   final Set<String> _selectedPresetFoods = <String>{};
   static const List<String> _presetFoods = [
     'Sangrecita',
@@ -260,18 +286,24 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
     }
   }
 
+  void _addPresetFoodSelection() {
+    final selected = _selectedPresetFoodOption;
+    if (selected == null) return;
+    setState(() {
+      _selectedPresetFoods.add(selected);
+      _selectedPresetFoodOption = null;
+    });
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
     final manualDescription = _descriptionController.text.trim();
-    final selectedFoodsDescription = _selectedSource == IronSourceType.food
-        ? _selectedPresetFoods.join(', ')
-        : '';
     final quickNote = _quickNoteController.text.trim();
-
     final descriptionParts = <String>[];
-    if (selectedFoodsDescription.isNotEmpty) {
-      descriptionParts.add(selectedFoodsDescription);
+
+    if (_selectedSource == IronSourceType.food && _selectedPresetFoods.isNotEmpty) {
+      descriptionParts.add('Alimentos seleccionados: ${_selectedPresetFoods.join(', ')}');
     }
     if (manualDescription.isNotEmpty) {
       descriptionParts.add(manualDescription);
@@ -279,13 +311,12 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
     if (quickNote.isNotEmpty) {
       descriptionParts.add('Nota/cantidad: $quickNote');
     }
-    final finalDescription = descriptionParts.join(' • ');
 
     Navigator.of(context).pop(
       _RecordFormData(
         date: _selectedDate,
         sourceType: _selectedSource,
-        description: finalDescription,
+        description: descriptionParts.join(' • '),
         wasAccepted: _wasAccepted,
       ),
     );
@@ -319,7 +350,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                   onTap: _pickDate,
                   leading: const Icon(Icons.calendar_today_outlined),
                   title: const Text('Fecha de registro'),
-                  subtitle: Text(_formatDate(_selectedDate)),
+                  subtitle: Text(formatDateDdMmYyyy(_selectedDate)),
                   trailing: const Icon(Icons.arrow_drop_down),
                 ),
               ),
@@ -349,6 +380,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                       _selectedSource = selected.first;
                       if (_selectedSource == IronSourceType.supplement) {
                         _selectedPresetFoods.clear();
+                        _selectedPresetFoodOption = null;
                         _quickNoteController.clear();
                       }
                     });
@@ -362,27 +394,49 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: _presetFoods
-                      .map(
-                        (food) => FilterChip(
-                          label: Text(food),
-                          selected: _selectedPresetFoods.contains(food),
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedPresetFoods.add(food);
-                              } else {
-                                _selectedPresetFoods.remove(food);
-                              }
-                            });
-                          },
-                        ),
-                      )
-                      .toList(growable: false),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedPresetFoodOption,
+                        hint: const Text('Selecciona un alimento'),
+                        items: _presetFoods
+                            .map(
+                              (food) => DropdownMenuItem<String>(
+                                value: food,
+                                child: Text(food),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) =>
+                            setState(() => _selectedPresetFoodOption = value),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    IconButton.filled(
+                      onPressed: _selectedPresetFoodOption == null
+                          ? null
+                          : _addPresetFoodSelection,
+                      icon: const Icon(Icons.add),
+                      tooltip: 'Agregar alimento',
+                    ),
+                  ],
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                if (_selectedPresetFoods.isNotEmpty)
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: _selectedPresetFoods
+                        .map(
+                          (food) => InputChip(
+                            label: Text(food),
+                            onDeleted: () =>
+                                setState(() => _selectedPresetFoods.remove(food)),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
                 const SizedBox(height: AppSpacing.md),
               ],
               TextFormField(
@@ -413,6 +467,11 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                 },
               ),
               if (_selectedSource == IronSourceType.food) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Puedes combinar seleccionados + texto manual para alimentos no listados.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 TextFormField(
                   controller: _quickNoteController,

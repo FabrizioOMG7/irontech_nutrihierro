@@ -47,6 +47,17 @@ void main() {
       expect(child.formattedAge, '1 año y 2 meses');
     });
 
+    test('formattedAge returns only years from 12 months when exact year', () {
+      final child = Child(
+        id: '1',
+        name: 'Ian',
+        birthDate: _birthDateMonthsAgo(12),
+        gender: Gender.male,
+      );
+
+      expect(child.formattedAge, '1 año');
+    });
+
     test('nutritionCategory follows expected age boundaries', () {
       final child = Child(
         id: '1',

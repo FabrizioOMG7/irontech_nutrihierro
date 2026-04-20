@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/features/tracking/data/tracking_repository_mock.dart';
 import '../../domain/daily_record.dart';
+import '../../domain/daily_records_query.dart';
 import '../../domain/monthly_records_query.dart';
 import '../../domain/tracking_repository.dart';
 
@@ -14,6 +15,11 @@ final trackingRepositoryProvider = Provider<TrackingRepository>((ref) {
 final monthlyRecordsProvider = FutureProvider.family<List<DailyRecord>, MonthlyRecordsQuery>((ref, query) async {
   final repository = ref.watch(trackingRepositoryProvider);
   return repository.getRecordsForChildInMonth(query);
+});
+
+final dailyRecordsProvider = FutureProvider.family<List<DailyRecord>, DailyRecordsQuery>((ref, query) async {
+  final repository = ref.watch(trackingRepositoryProvider);
+  return repository.getRecordsForChildInDate(query);
 });
 
 // 3. Notifier para guardar nuevos registros y refrescar el calendario
@@ -31,6 +37,7 @@ class TrackingController extends AsyncNotifier<void> {
       await ref.read(trackingRepositoryProvider).saveRecord(record);
       // Invalida el proveedor de lectura para que el calendario se vuelva a dibujar automáticamente
       ref.invalidate(monthlyRecordsProvider);
+      ref.invalidate(dailyRecordsProvider);
       state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

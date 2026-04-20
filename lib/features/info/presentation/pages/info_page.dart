@@ -37,7 +37,7 @@ class InfoPage extends ConsumerWidget {
                   child: ListTile(
                     leading: const Icon(Icons.article_outlined),
                     title: Text(article.title),
-                    subtitle: const Text('Toca para leer más'),
+                    subtitle: const Text('Contenido para padres y cuidadores'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/info/${article.id}'),
                   ),
@@ -81,7 +81,7 @@ class InfoDetailPage extends ConsumerWidget {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                Text(article.content, style: Theme.of(context).textTheme.bodyLarge),
+                ..._buildSectionCards(context, article.content),
               ],
             );
           },
@@ -89,6 +89,25 @@ class InfoDetailPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+List<Widget> _buildSectionCards(BuildContext context, String content) {
+  final sections = content
+      .split('\n\n')
+      .where((section) => section.trim().isNotEmpty)
+      .toList(growable: false);
+
+  return [
+    for (final section in sections) ...[
+      Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Text(section, style: Theme.of(context).textTheme.bodyLarge),
+        ),
+      ),
+      const SizedBox(height: AppSpacing.sm),
+    ],
+  ];
 }
 
 AnemiaInfoArticle? _findArticleById(List<AnemiaInfoArticle> articles, String id) {

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/theme/app_colors.dart';
 
 class AppTheme {
+  static const int _chipSelectedOpacityAlpha = 35;
+  static const int _chipOutlineOpacityAlpha = 180;
+
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
@@ -15,30 +19,31 @@ class AppTheme {
       onPrimary: Colors.white,
     );
 
+    final baseTextTheme = GoogleFonts.interTextTheme();
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: 'Roboto',
       visualDensity: VisualDensity.adaptivePlatformDensity,
-      textTheme: const TextTheme(
-        headlineSmall: TextStyle(
+      textTheme: baseTextTheme.copyWith(
+        headlineSmall: const TextStyle(
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
         ),
-        titleLarge: TextStyle(
+        titleLarge: const TextStyle(
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
         ),
-        titleMedium: TextStyle(
+        titleMedium: const TextStyle(
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
         ),
-        bodyLarge: TextStyle(color: AppColors.textPrimary),
-        bodyMedium: TextStyle(color: AppColors.textSecondary),
+        bodyLarge: const TextStyle(color: AppColors.textPrimary),
+        bodyMedium: const TextStyle(color: AppColors.textSecondary),
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
+        elevation: 1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
@@ -57,6 +62,13 @@ class AppTheme {
           minimumSize: const Size.fromHeight(48),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
+      ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+        selectedColor: colorScheme.primary.withAlpha(_chipSelectedOpacityAlpha),
+        side: BorderSide(color: colorScheme.outline.withAlpha(_chipOutlineOpacityAlpha)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -87,7 +99,7 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
-        centerTitle: true,
+        centerTitle: false,
         elevation: 0,
       ),
       snackBarTheme: SnackBarThemeData(

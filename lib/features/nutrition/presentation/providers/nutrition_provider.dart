@@ -15,3 +15,8 @@ final recipesByCategoryProvider = FutureProvider.family<List<Recipe>, AgeCategor
   final repository = ref.watch(nutritionRepositoryProvider);
   return repository.getRecipesByCategory(category);
 });
+
+final allRecipesProvider = FutureProvider<List<Recipe>>((ref) async {
+  final repository = ref.watch(nutritionRepositoryProvider);
+  return repository.getAllRecipes();
+});
