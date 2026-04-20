@@ -26,6 +26,14 @@ class ChildrenListNotifier extends AsyncNotifier<List<Child>> {
   }
 
   Future<void> addChild(Child child) async {
+    await _saveChild(child);
+  }
+
+  Future<void> updateChild(Child child) async {
+    await _saveChild(child);
+  }
+
+  Future<void> _saveChild(Child child) async {
     state = const AsyncValue.loading();
     try {
       await ref.read(profileRepositoryProvider).saveChild(child);

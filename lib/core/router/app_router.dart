@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:irontech_nutrihierro/features/alerts/presentation/pages/alerts_page.dart';
+import 'package:irontech_nutrihierro/features/info/presentation/pages/info_page.dart';
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/pages/nutrition_page.dart';
+import 'package:irontech_nutrihierro/features/profile/presentation/pages/child_profile_page.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/tracking_page.dart';
 
@@ -17,6 +20,14 @@ final appRouterByAgeProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile-register',
         builder: (context, state) => const ProfileRegisterPage(),
+      ),
+      GoRoute(
+        path: '/child-profile',
+        builder: (context, state) => const ChildProfilePage(),
+      ),
+      GoRoute(
+        path: '/alerts',
+        builder: (context, state) => const AlertsPage(),
       ),
 
       // 2. RUTAS DENTRO DEL CASCARÓN (Con barra de navegación)
@@ -51,6 +62,23 @@ final appRouterByAgeProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/tracking',
                 builder: (context, state) => const TrackingPage(),
+              ),
+            ],
+          ),
+          // PESTAÑA 3: Información
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/info',
+                builder: (context, state) => const InfoPage(),
+                routes: [
+                  GoRoute(
+                    path: ':articleId',
+                    builder: (context, state) => InfoDetailPage(
+                      articleId: state.pathParameters['articleId']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
