@@ -144,8 +144,6 @@ class TrackingPage extends ConsumerWidget {
             label: Text(
               trackingState.isLoading ? 'Guardando...' : 'Registrar ingesta',
             ),
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
           );
         },
         orElse: () => null,

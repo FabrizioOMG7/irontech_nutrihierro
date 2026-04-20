@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 
 class MainLayout extends StatelessWidget {
   // Esta variable es la que controla qué rama (pestaña) está activa
@@ -27,7 +26,6 @@ class MainLayout extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: _goBranch,
-        indicatorColor: AppColors.primary.withAlpha(26),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.restaurant_menu),

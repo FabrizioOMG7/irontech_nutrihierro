@@ -128,12 +128,12 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
               ElevatedButton(
                 onPressed: _isSaving ? null : _saveForm,
                 child: _isSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: theme.colorScheme.onPrimary,
                         ),
                       )
                     : const Text('Guardar perfil'),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/core/router/app_router.dart';
-import 'package:irontech_nutrihierro/core/theme/app_theme.dart'; 
+import 'package:irontech_nutrihierro/theme/app_theme.dart';
 
 void main() {
   runApp(
@@ -21,7 +21,7 @@ class MainApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'IronTech NutriHierro',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme().getTheme(),
+      theme: AppTheme.light(),
       routerConfig: router,
     );
   }
