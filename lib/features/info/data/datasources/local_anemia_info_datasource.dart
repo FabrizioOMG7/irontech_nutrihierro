@@ -5,16 +5,23 @@ class LocalAnemiaInfoDataSource {
     return const [
       AnemiaInfoArticle(
         id: 'info_1',
-        title: '¿Qué es la anemia infantil?',
+        title: 'Anemia: concepto básico',
         content:
-            'La anemia infantil es una condición en la que baja la hemoglobina y puede afectar el desarrollo cognitivo y físico.',
+            'La anemia ocurre cuando la hemoglobina está baja y el cuerpo no transporta suficiente oxígeno. Una alimentación rica en hierro, vitamina C y controles médicos ayuda a prevenirla.',
         audience: 'familias',
       ),
       AnemiaInfoArticle(
         id: 'info_2',
-        title: 'Síntomas frecuentes',
+        title: 'Anemia infantil',
         content:
-            'Cansancio, palidez, pérdida de apetito e irritabilidad pueden ser señales de alerta.',
+            'En niños puede impactar crecimiento, aprendizaje y defensas. Es importante reforzar alimentos con hierro desde la alimentación complementaria y seguir indicaciones del centro de salud.',
+        audience: 'familias',
+      ),
+      AnemiaInfoArticle(
+        id: 'info_3',
+        title: 'Síntomas y consecuencias',
+        content:
+            'Síntomas frecuentes: palidez, cansancio, irritabilidad y poco apetito. Si no se corrige a tiempo, puede afectar el desarrollo cognitivo y motor.',
         audience: 'familias',
       ),
     ];

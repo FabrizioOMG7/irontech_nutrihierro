@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
@@ -20,11 +21,7 @@ class NutritionPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_active),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Módulo de alertas en construcción 🚧')),
-              );
-            },
+            onPressed: () => context.push('/alerts'),
           ),
         ],
       ),

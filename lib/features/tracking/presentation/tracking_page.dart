@@ -223,13 +223,25 @@ class _RecordFormSheet extends StatefulWidget {
 class _RecordFormSheetState extends State<_RecordFormSheet> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
+  final _quickNoteController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   IronSourceType _selectedSource = IronSourceType.food;
   bool _wasAccepted = true;
+  final Set<String> _selectedPresetFoods = <String>{};
+  static const List<String> _presetFoods = [
+    'Sangrecita',
+    'Hígado de pollo',
+    'Bazo',
+    'Lentejas',
+    'Pescado',
+    'Espinaca',
+    'Quinua',
+  ];
 
   @override
   void dispose() {
     _descriptionController.dispose();
+    _quickNoteController.dispose();
     super.dispose();
   }
 
@@ -251,11 +263,29 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    final manualDescription = _descriptionController.text.trim();
+    final selectedFoodsDescription = _selectedSource == IronSourceType.food
+        ? _selectedPresetFoods.join(', ')
+        : '';
+    final quickNote = _quickNoteController.text.trim();
+
+    final descriptionParts = <String>[];
+    if (selectedFoodsDescription.isNotEmpty) {
+      descriptionParts.add(selectedFoodsDescription);
+    }
+    if (manualDescription.isNotEmpty) {
+      descriptionParts.add(manualDescription);
+    }
+    if (quickNote.isNotEmpty) {
+      descriptionParts.add('Nota/cantidad: $quickNote');
+    }
+    final finalDescription = descriptionParts.join(' • ');
+
     Navigator.of(context).pop(
       _RecordFormData(
         date: _selectedDate,
         sourceType: _selectedSource,
-        description: _descriptionController.text.trim(),
+        description: finalDescription,
         wasAccepted: _wasAccepted,
       ),
     );
@@ -315,28 +345,84 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                 selected: {_selectedSource},
                 onSelectionChanged: (selected) {
                   if (selected.isNotEmpty) {
-                    setState(() => _selectedSource = selected.first);
+                    setState(() {
+                      _selectedSource = selected.first;
+                      if (_selectedSource == IronSourceType.supplement) {
+                        _selectedPresetFoods.clear();
+                        _quickNoteController.clear();
+                      }
+                    });
                   }
                 },
               ),
               const SizedBox(height: AppSpacing.md),
+              if (_selectedSource == IronSourceType.food) ...[
+                const Text(
+                  'Alimentos predeterminados',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: _presetFoods
+                      .map(
+                        (food) => FilterChip(
+                          label: Text(food),
+                          selected: _selectedPresetFoods.contains(food),
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedPresetFoods.add(food);
+                              } else {
+                                _selectedPresetFoods.remove(food);
+                              }
+                            });
+                          },
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               TextFormField(
                 controller: _descriptionController,
                 minLines: 2,
                 maxLines: 3,
                 textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción',
-                  hintText: 'Ejemplo: Sangrecita con arroz, 2 cucharadas',
+                decoration: InputDecoration(
+                  labelText: _selectedSource == IronSourceType.food
+                      ? 'Descripción manual (opcional)'
+                      : 'Descripción',
+                  hintText: _selectedSource == IronSourceType.food
+                      ? 'Ejemplo: agregar arroz y zanahoria'
+                      : 'Ejemplo: Sulfato ferroso, 10 gotas',
                 ),
                 validator: (value) {
                   final trimmed = value?.trim() ?? '';
+                  if (_selectedSource == IronSourceType.food &&
+                      _selectedPresetFoods.isNotEmpty &&
+                      trimmed.isEmpty) {
+                    return null;
+                  }
                   if (trimmed.isEmpty) return 'Ingresa una descripción';
-                  if (trimmed.length < 6)
+                  if (trimmed.length < 6) {
                     return 'Describe con un poco más de detalle';
+                  }
                   return null;
                 },
               ),
+              if (_selectedSource == IronSourceType.food) ...[
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  controller: _quickNoteController,
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(
+                    labelText: 'Cantidad/nota (opcional)',
+                    hintText: 'Ejemplo: 2 cucharadas',
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
