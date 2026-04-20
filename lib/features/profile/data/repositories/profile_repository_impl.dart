@@ -7,7 +7,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
   final FirebaseFirestore _firestore;
 
   ProfileRepositoryImpl({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   CollectionReference get _childrenCollection =>
       _firestore.collection('children');
@@ -40,7 +40,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
           id: data['id'],
           name: data['name'],
           birthDate: (data['birthDate'] as Timestamp).toDate(),
-          gender: Gender.values.firstWhere((e) => e.name == data['gender']),
+          gender: genderFromStorage(data['gender'] as String?),
         );
       }).toList();
     } catch (e) {

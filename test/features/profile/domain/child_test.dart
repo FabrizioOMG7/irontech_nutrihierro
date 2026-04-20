@@ -52,7 +52,7 @@ void main() {
         id: '1',
         name: 'Kai',
         birthDate: _birthDateMonthsAgo(10),
-        gender: Gender.other,
+        gender: Gender.female,
       );
 
       expect(child.nutritionCategory, '9 a 11 meses (Picados)');

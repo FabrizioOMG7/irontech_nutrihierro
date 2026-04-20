@@ -10,9 +10,37 @@ import 'package:irontech_nutrihierro/features/tracking/domain/monthly_records_qu
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:uuid/uuid.dart';
 
-
 class TrackingPage extends ConsumerWidget {
   const TrackingPage({super.key});
+
+  Future<void> _openRecordForm(
+    BuildContext context,
+    WidgetRef ref,
+    String childId,
+    bool isSaving,
+  ) async {
+    if (isSaving) return;
+
+    final formData = await showModalBottomSheet<_RecordFormData>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => const _RecordFormSheet(),
+    );
+
+    if (formData == null) return;
+
+    final newRecord = DailyRecord(
+      id: const Uuid().v4(),
+      childId: childId,
+      date: formData.date,
+      sourceType: formData.sourceType,
+      description: formData.description,
+      wasAccepted: formData.wasAccepted,
+    );
+
+    await ref.read(trackingControllerProvider.notifier).addRecord(newRecord);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,7 +76,8 @@ class TrackingPage extends ConsumerWidget {
             return const EmptyStateView(
               icon: Icons.child_care,
               title: 'Necesitas un perfil para iniciar',
-              message: 'Registra un niño/a y vuelve aquí para empezar el seguimiento diario.',
+              message:
+                  'Registra un niño/a y vuelve aquí para empezar el seguimiento diario.',
             );
           }
 
@@ -84,12 +113,14 @@ class TrackingPage extends ConsumerWidget {
                         return const EmptyStateView(
                           icon: Icons.calendar_month,
                           title: 'Sin registros este mes',
-                          message: 'Usa "Registrar hoy" para guardar la primera ingesta del mes.',
+                          message:
+                              'Usa "Registrar ingesta" para guardar el primer registro del mes.',
                         );
                       }
                       return ListView.builder(
                         itemCount: records.length,
-                        itemBuilder: (context, index) => _RecordTile(record: records[index]),
+                        itemBuilder: (context, index) =>
+                            _RecordTile(record: records[index]),
                       );
                     },
                   ),
@@ -103,18 +134,16 @@ class TrackingPage extends ConsumerWidget {
         data: (children) {
           if (children.isEmpty) return null;
           return FloatingActionButton.extended(
-            onPressed: trackingState.isLoading ? null : () {
-              final newRecord = DailyRecord(
-                id: const Uuid().v4(),
-                childId: children.first.id,
-                date: DateTime.now(),
-                sourceType: IronSourceType.food,
-                description: 'Papilla rica en hierro',
-              );
-              ref.read(trackingControllerProvider.notifier).addRecord(newRecord);
-            },
+            onPressed: () => _openRecordForm(
+              context,
+              ref,
+              children.first.id,
+              trackingState.isLoading,
+            ),
             icon: const Icon(Icons.add),
-            label: Text(trackingState.isLoading ? 'Guardando...' : 'Registrar hoy'),
+            label: Text(
+              trackingState.isLoading ? 'Guardando...' : 'Registrar ingesta',
+            ),
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
           );
@@ -132,16 +161,203 @@ class _RecordTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accepted = record.wasAccepted;
+    final statusColor = accepted ? AppColors.success : AppColors.warning;
+
     return Card(
       child: ListTile(
         minVerticalPadding: AppSpacing.sm,
         leading: Icon(
-          record.sourceType == IronSourceType.food ? Icons.restaurant : Icons.local_hospital,
+          record.sourceType == IronSourceType.food
+              ? Icons.restaurant
+              : Icons.local_hospital,
           color: AppColors.primary,
         ),
         title: Text(record.description),
-        subtitle: Text('${record.date.day}/${record.date.month}/${record.date.year}'),
-        trailing: const Icon(Icons.check_circle, color: AppColors.success),
+        subtitle: Text(
+          '${_formatDate(record.date)} • ${_sourceLabel(record.sourceType)}',
+        ),
+        trailing: Icon(
+          accepted ? Icons.check_circle : Icons.info_outline,
+          color: statusColor,
+        ),
+      ),
+    );
+  }
+}
+
+String _formatDate(DateTime date) {
+  final day = date.day.toString().padLeft(2, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  return '$day/$month/${date.year}';
+}
+
+String _sourceLabel(IronSourceType sourceType) {
+  switch (sourceType) {
+    case IronSourceType.food:
+      return 'Alimento';
+    case IronSourceType.supplement:
+      return 'Suplemento';
+  }
+}
+
+class _RecordFormData {
+  final DateTime date;
+  final IronSourceType sourceType;
+  final String description;
+  final bool wasAccepted;
+
+  const _RecordFormData({
+    required this.date,
+    required this.sourceType,
+    required this.description,
+    required this.wasAccepted,
+  });
+}
+
+class _RecordFormSheet extends StatefulWidget {
+  const _RecordFormSheet();
+
+  @override
+  State<_RecordFormSheet> createState() => _RecordFormSheetState();
+}
+
+class _RecordFormSheetState extends State<_RecordFormSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _descriptionController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
+  IronSourceType _selectedSource = IronSourceType.food;
+  bool _wasAccepted = true;
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month, 1);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: monthStart,
+      lastDate: now,
+    );
+
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+
+    Navigator.of(context).pop(
+      _RecordFormData(
+        date: _selectedDate,
+        sourceType: _selectedSource,
+        description: _descriptionController.text.trim(),
+        wasAccepted: _wasAccepted,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        bottomInset + AppSpacing.md,
+      ),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Nueva ingesta',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Card(
+                child: ListTile(
+                  onTap: _pickDate,
+                  leading: const Icon(Icons.calendar_today_outlined),
+                  title: const Text('Fecha de registro'),
+                  subtitle: Text(_formatDate(_selectedDate)),
+                  trailing: const Icon(Icons.arrow_drop_down),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const Text(
+                'Tipo de ingesta',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SegmentedButton<IronSourceType>(
+                segments: const [
+                  ButtonSegment<IronSourceType>(
+                    value: IronSourceType.food,
+                    icon: Icon(Icons.restaurant),
+                    label: Text('Alimento'),
+                  ),
+                  ButtonSegment<IronSourceType>(
+                    value: IronSourceType.supplement,
+                    icon: Icon(Icons.local_hospital),
+                    label: Text('Suplemento'),
+                  ),
+                ],
+                selected: {_selectedSource},
+                onSelectionChanged: (selected) {
+                  if (selected.isNotEmpty) {
+                    setState(() => _selectedSource = selected.first);
+                  }
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                controller: _descriptionController,
+                minLines: 2,
+                maxLines: 3,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  hintText: 'Ejemplo: Sangrecita con arroz, 2 cucharadas',
+                ),
+                validator: (value) {
+                  final trimmed = value?.trim() ?? '';
+                  if (trimmed.isEmpty) return 'Ingresa una descripción';
+                  if (trimmed.length < 6)
+                    return 'Describe con un poco más de detalle';
+                  return null;
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: _wasAccepted,
+                onChanged: (value) => setState(() => _wasAccepted = value),
+                title: const Text('¿El niño/a aceptó la ingesta?'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _submit,
+                  icon: const Icon(Icons.save_outlined),
+                  label: const Text('Guardar registro'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

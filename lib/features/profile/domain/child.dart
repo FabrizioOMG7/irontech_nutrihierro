@@ -1,7 +1,16 @@
-import 'package:flutter/foundation.dart';
-
 /// Géneros posibles para el perfil del niño/a
-enum Gender { male, female, other }
+enum Gender { male, female }
+
+Gender genderFromStorage(String? rawGender) {
+  switch (rawGender) {
+    case 'male':
+      return Gender.male;
+    case 'female':
+      return Gender.female;
+    default:
+      return Gender.female;
+  }
+}
 
 /// Entidad que representa a un Niño/a en el sistema.
 /// Esta es la clase central que usaremos para filtrar recetas y alertas.
@@ -22,12 +31,12 @@ class Child {
   // LÓGICA DE NEGOCIO (Domain Logic)
   // ==========================================================
 
-  /// Calcula la edad total en meses. 
+  /// Calcula la edad total en meses.
   /// Es vital para los filtros de nutrición (ej: 6-8 meses).
   int get ageInMonths {
     final now = DateTime.now();
     int months = (now.year - birthDate.year) * 12 + now.month - birthDate.month;
-    
+
     // Ajuste si el día actual es menor al día de nacimiento
     if (now.day < birthDate.day) {
       months--;
@@ -47,7 +56,7 @@ class Child {
       final years = ageInYears;
       final remainingMonths = months % 12;
       final yearsLabel = years == 1 ? 'año' : 'años';
-      return remainingMonths == 0 
+      return remainingMonths == 0
           ? '$years $yearsLabel'
           : '$years $yearsLabel y $remainingMonths meses';
     }
