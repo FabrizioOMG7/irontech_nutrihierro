@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
+import 'package:irontech_nutrihierro/core/utils/date_formatters.dart';
 import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
@@ -126,7 +127,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                           onTap: _pickHistoryDate,
                           leading: const Icon(Icons.calendar_today_outlined),
                           title: const Text('Ver historial por fecha'),
-                          subtitle: Text(_formatDate(_historyDate)),
+                          subtitle: Text(formatDateDdMmYyyy(_historyDate)),
                           trailing: const Icon(Icons.arrow_drop_down),
                         ),
                       ],
@@ -142,7 +143,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                       if (records.isEmpty) {
                         return EmptyStateView(
                           icon: Icons.calendar_month,
-                          title: 'Sin registros en ${_formatDate(_historyDate)}',
+                          title: 'Sin registros en ${formatDateDdMmYyyy(_historyDate)}',
                           message:
                               'Usa "Registrar ingesta" para guardar registros y consultarlos por fecha.',
                         );
@@ -203,7 +204,7 @@ class _RecordTile extends StatelessWidget {
         ),
         title: Text(record.description),
         subtitle: Text(
-          '${_formatDate(record.date)} • ${_sourceLabel(record.sourceType)}',
+          '${formatDateDdMmYyyy(record.date)} • ${_sourceLabel(record.sourceType)}',
         ),
         trailing: Icon(
           accepted ? Icons.check_circle : Icons.info_outline,
@@ -212,12 +213,6 @@ class _RecordTile extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatDate(DateTime date) {
-  final day = date.day.toString().padLeft(2, '0');
-  final month = date.month.toString().padLeft(2, '0');
-  return '$day/$month/${date.year}';
 }
 
 String _sourceLabel(IronSourceType sourceType) {
@@ -259,7 +254,6 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
   bool _wasAccepted = true;
   String? _selectedPresetFoodOption;
   final Set<String> _selectedPresetFoods = <String>{};
-
   static const List<String> _presetFoods = [
     'Sangrecita',
     'Hígado de pollo',
@@ -309,7 +303,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
     final descriptionParts = <String>[];
 
     if (_selectedSource == IronSourceType.food && _selectedPresetFoods.isNotEmpty) {
-      descriptionParts.add('Alimentos: ${_selectedPresetFoods.join(', ')}');
+      descriptionParts.add('Alimentos seleccionados: ${_selectedPresetFoods.join(', ')}');
     }
     if (manualDescription.isNotEmpty) {
       descriptionParts.add(manualDescription);
@@ -356,7 +350,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                   onTap: _pickDate,
                   leading: const Icon(Icons.calendar_today_outlined),
                   title: const Text('Fecha de registro'),
-                  subtitle: Text(_formatDate(_selectedDate)),
+                  subtitle: Text(formatDateDdMmYyyy(_selectedDate)),
                   trailing: const Icon(Icons.arrow_drop_down),
                 ),
               ),
@@ -396,7 +390,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
               const SizedBox(height: AppSpacing.md),
               if (_selectedSource == IronSourceType.food) ...[
                 const Text(
-                  'Alimentos predeterminados (selector múltiple)',
+                  'Alimentos predeterminados',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: AppSpacing.sm),

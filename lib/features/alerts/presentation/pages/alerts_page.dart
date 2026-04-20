@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
+import 'package:irontech_nutrihierro/core/utils/date_formatters.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
 import 'package:irontech_nutrihierro/features/alerts/domain/app_alert.dart';
@@ -107,7 +108,7 @@ class _AlertTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '${alert.message}\n${_formatDate(alert.createdAt)} • ${alert.isRead ? 'Leída' : 'Pendiente'}',
+          '${alert.message}\n${formatDateDdMmYyyy(alert.createdAt)} • ${alert.isRead ? 'Leída' : 'Pendiente'}',
         ),
         trailing: alert.isRead
             ? const Icon(Icons.check_circle_outline)
@@ -119,10 +120,4 @@ class _AlertTile extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatDate(DateTime date) {
-  final day = date.day.toString().padLeft(2, '0');
-  final month = date.month.toString().padLeft(2, '0');
-  return '$day/$month/${date.year}';
 }

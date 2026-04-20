@@ -13,7 +13,7 @@ class AppAlert {
 
   const AppAlert({
     required this.id,
-    required this.type,
+    this.type = AppAlertType.ironIntakeReminder,
     required this.title,
     required this.message,
     required this.createdAt,

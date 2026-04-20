@@ -4,6 +4,9 @@ import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/theme/app_colors.dart';
 
 class AppTheme {
+  static const int _chipSelectedOpacityAlpha = 35;
+  static const int _chipOutlineOpacityAlpha = 180;
+
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
@@ -64,8 +67,8 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
-        selectedColor: colorScheme.primary.withAlpha(35),
-        side: BorderSide(color: colorScheme.outline.withAlpha(180)),
+        selectedColor: colorScheme.primary.withAlpha(_chipSelectedOpacityAlpha),
+        side: BorderSide(color: colorScheme.outline.withAlpha(_chipOutlineOpacityAlpha)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

@@ -5,8 +5,8 @@ import 'package:irontech_nutrihierro/features/tracking/domain/tracking_repositor
 
 /// Implementación temporal en RAM para probar el calendario sin Firebase.
 class TrackingRepositoryMock implements TrackingRepository {
-  // Nuestra lista en memoria RAM (static para preservar mientras la app siga abierta).
-  static final List<DailyRecord> _memoryDb = [];
+  // Nuestra lista en memoria RAM (válida para la sesión actual de la app).
+  final List<DailyRecord> _memoryDb = [];
 
   @override
   Future<void> saveRecord(DailyRecord record) async {

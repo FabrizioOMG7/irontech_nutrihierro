@@ -6,6 +6,11 @@ final alertsProvider = StateNotifierProvider<AlertsNotifier, List<AppAlert>>(
 );
 
 class AlertsNotifier extends StateNotifier<List<AppAlert>> {
+  // Horarios base diarios pensados para mañana temprana.
+  static const int _intakeReminderHour = 8;
+  static const int _tipHour = 9;
+  static const int _tipMinute = 30;
+
   AlertsNotifier({DateTime Function()? nowProvider})
       : _nowProvider = nowProvider ?? DateTime.now,
         super(const []) {
@@ -27,14 +32,25 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
         type: AppAlertType.ironIntakeReminder,
         title: 'Recordatorio diario de hierro',
         message: 'Hoy toca registrar una ingesta rica en hierro.',
-        createdAt: DateTime(dayKey.year, dayKey.month, dayKey.day, 8),
+        createdAt: DateTime(
+          dayKey.year,
+          dayKey.month,
+          dayKey.day,
+          _intakeReminderHour,
+        ),
       ),
       AppAlert(
         id: _dailyAlertId(dayKey, AppAlertType.nutritionTip),
         type: AppAlertType.nutritionTip,
         title: 'Tip diario de nutrición',
         message: 'Combina lentejas con cítricos para mejorar absorción.',
-        createdAt: DateTime(dayKey.year, dayKey.month, dayKey.day, 9, 30),
+        createdAt: DateTime(
+          dayKey.year,
+          dayKey.month,
+          dayKey.day,
+          _tipHour,
+          _tipMinute,
+        ),
       ),
     ];
 
