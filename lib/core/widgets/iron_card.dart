@@ -28,10 +28,14 @@ class IronCard extends StatelessWidget {
             height: 150,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
             ),
-            child: const Icon(Icons.image, size: 50, color: Colors.grey),
+            child: Icon(
+              Icons.image,
+              size: 50,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),

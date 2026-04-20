@@ -97,15 +97,17 @@ class _ChildHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
-      color: Theme.of(context).colorScheme.primary.withAlpha(15),
+      color: colorScheme.primary.withAlpha(15),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
-            const CircleAvatar(
-              backgroundColor: AppColors.primary,
-              child: Icon(Icons.child_care, color: Colors.white),
+            CircleAvatar(
+              backgroundColor: colorScheme.primary,
+              child: Icon(Icons.child_care, color: colorScheme.onPrimary),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -132,15 +134,21 @@ class _IronBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: colorScheme.primary,
         borderRadius: BorderRadius.circular(AppRadius.xl),
       ),
       child: Text(
         '$ironContent mg de hierro',
-        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: colorScheme.onPrimary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
