@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/features/alerts/presentation/pages/alerts_page.dart';
 import 'package:irontech_nutrihierro/features/info/presentation/pages/info_page.dart';
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/pages/nutrition_page.dart';
+import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/pages/recommended_foods_page.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/pages/child_profile_page.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/tracking_page.dart';
@@ -28,6 +29,10 @@ final appRouterByAgeProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/alerts',
         builder: (context, state) => const AlertsPage(),
+      ),
+      GoRoute(
+        path: '/recommended-foods',
+        builder: (context, state) => const RecommendedFoodsPage(),
       ),
 
       // 2. RUTAS DENTRO DEL CASCARÓN (Con barra de navegación)

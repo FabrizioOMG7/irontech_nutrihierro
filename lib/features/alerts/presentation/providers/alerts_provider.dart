@@ -6,28 +6,48 @@ final alertsProvider = StateNotifierProvider<AlertsNotifier, List<AppAlert>>(
 );
 
 class AlertsNotifier extends StateNotifier<List<AppAlert>> {
-  AlertsNotifier() : super(_initialAlerts);
+  AlertsNotifier({DateTime Function()? nowProvider})
+      : _nowProvider = nowProvider ?? DateTime.now,
+        super(const []) {
+    ensureDailyAlerts();
+  }
 
-  static final List<AppAlert> _initialAlerts = [
-    AppAlert(
-      id: 'alert_1',
-      title: 'Recordatorio de hierro',
-      message: 'Hoy toca registrar una ingesta rica en hierro.',
-      createdAt: DateTime(2026, 4, 20, 8, 0),
-    ),
-    AppAlert(
-      id: 'alert_2',
-      title: 'Tip nutricional',
-      message: 'Combina lentejas con cítricos para mejorar absorción.',
-      createdAt: DateTime(2026, 4, 19, 9, 30),
-    ),
-    AppAlert(
-      id: 'alert_3',
-      title: 'Seguimiento semanal',
-      message: 'Revisa el registro diario para completar la semana.',
-      createdAt: DateTime(2026, 4, 18, 19, 0),
-    ),
-  ];
+  final DateTime Function() _nowProvider;
+
+  /// Regla mínima documentada:
+  /// - Se crean alertas programáticas por día.
+  /// - No se duplica una alerta del mismo tipo en la misma fecha.
+  /// - Cada alerta inicia en "pendiente" (isRead=false) y puede marcarse como leída.
+  void ensureDailyAlerts() {
+    final now = _nowProvider();
+    final dayKey = _dateOnly(now);
+    final candidates = <AppAlert>[
+      AppAlert(
+        id: _dailyAlertId(dayKey, AppAlertType.ironIntakeReminder),
+        type: AppAlertType.ironIntakeReminder,
+        title: 'Recordatorio diario de hierro',
+        message: 'Hoy toca registrar una ingesta rica en hierro.',
+        createdAt: DateTime(dayKey.year, dayKey.month, dayKey.day, 8),
+      ),
+      AppAlert(
+        id: _dailyAlertId(dayKey, AppAlertType.nutritionTip),
+        type: AppAlertType.nutritionTip,
+        title: 'Tip diario de nutrición',
+        message: 'Combina lentejas con cítricos para mejorar absorción.',
+        createdAt: DateTime(dayKey.year, dayKey.month, dayKey.day, 9, 30),
+      ),
+    ];
+
+    final existingIds = state.map((alert) => alert.id).toSet();
+    final newAlerts = candidates
+        .where((alert) => !existingIds.contains(alert.id))
+        .toList(growable: false);
+
+    if (newAlerts.isEmpty) return;
+    final merged = [...state, ...newAlerts]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = merged;
+  }
 
   void markAsRead(String alertId) {
     state = [
@@ -44,5 +64,14 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
 
   void clearRead() {
     state = state.where((alert) => !alert.isRead).toList(growable: false);
+  }
+
+  static DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
+
+  static String _dailyAlertId(DateTime day, AppAlertType type) {
+    final month = day.month.toString().padLeft(2, '0');
+    final dayPart = day.day.toString().padLeft(2, '0');
+    return '${type.name}-${day.year}$month$dayPart';
   }
 }

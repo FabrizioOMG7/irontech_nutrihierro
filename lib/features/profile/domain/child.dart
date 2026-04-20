@@ -51,14 +51,16 @@ class Child {
   String get formattedAge {
     final months = ageInMonths;
     if (months < 12) {
-      return '$months meses';
+      final monthLabel = months == 1 ? 'mes' : 'meses';
+      return '$months $monthLabel';
     } else {
       final years = ageInYears;
       final remainingMonths = months % 12;
       final yearsLabel = years == 1 ? 'año' : 'años';
+      final monthsLabel = remainingMonths == 1 ? 'mes' : 'meses';
       return remainingMonths == 0
           ? '$years $yearsLabel'
-          : '$years $yearsLabel y $remainingMonths meses';
+          : '$years $yearsLabel y $remainingMonths $monthsLabel';
     }
   }
 

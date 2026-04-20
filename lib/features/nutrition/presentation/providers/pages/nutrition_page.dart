@@ -45,10 +45,25 @@ class NutritionPage extends ConsumerWidget {
               children: [
                 _ChildHeader(
                   name: child.name,
+                  ageLabel: child.formattedAge,
                   nutritionCategory: child.nutritionCategory,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                Text('Alimentos recomendados', style: Theme.of(context).textTheme.headlineSmall),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Alimentos recomendados',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.push('/recommended-foods'),
+                      icon: const Icon(Icons.open_in_new),
+                      label: const Text('Ver todos'),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Expanded(
                   child: AsyncValueView(
@@ -88,9 +103,14 @@ class NutritionPage extends ConsumerWidget {
 
 class _ChildHeader extends StatelessWidget {
   final String name;
+  final String ageLabel;
   final String nutritionCategory;
 
-  const _ChildHeader({required this.name, required this.nutritionCategory});
+  const _ChildHeader({
+    required this.name,
+    required this.ageLabel,
+    required this.nutritionCategory,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +132,8 @@ class _ChildHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Recetas para $name', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('Edad: $ageLabel', style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: AppSpacing.xs),
                   Text('Etapa: $nutritionCategory', style: Theme.of(context).textTheme.bodyMedium),
                 ],

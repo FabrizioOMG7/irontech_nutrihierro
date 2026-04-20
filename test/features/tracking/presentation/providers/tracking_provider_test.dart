@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_record.dart';
+import 'package:irontech_nutrihierro/features/tracking/domain/daily_records_query.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/monthly_records_query.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/tracking_repository.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
@@ -20,6 +21,17 @@ class _TrackingRepositoryFake implements TrackingRepository {
             r.childId == query.childId &&
             r.date.month == query.month &&
             r.date.year == query.year)
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<DailyRecord>> getRecordsForChildInDate(DailyRecordsQuery query) async {
+    return _records
+        .where((r) =>
+            r.childId == query.childId &&
+            r.date.year == query.date.year &&
+            r.date.month == query.date.month &&
+            r.date.day == query.date.day)
         .toList(growable: false);
   }
 
@@ -102,6 +114,43 @@ void main() {
       final updated = await container.read(monthlyRecordsProvider(query).future);
       expect(updated, hasLength(1));
       expect(updated.first.id, 'new-record');
+    });
+
+    test('dailyRecordsProvider returns records filtered by selected date', () async {
+      final repository = _TrackingRepositoryFake();
+      final now = DateTime.now();
+      await repository.saveRecord(
+        DailyRecord(
+          id: 'today',
+          childId: 'c1',
+          date: now,
+          sourceType: IronSourceType.food,
+          description: 'Sangrecita',
+        ),
+      );
+      await repository.saveRecord(
+        DailyRecord(
+          id: 'yesterday',
+          childId: 'c1',
+          date: now.subtract(const Duration(days: 1)),
+          sourceType: IronSourceType.food,
+          description: 'Lentejas',
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          trackingRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final records = await container.read(
+        dailyRecordsProvider(DailyRecordsQuery(childId: 'c1', date: now)).future,
+      );
+
+      expect(records, hasLength(1));
+      expect(records.first.id, 'today');
     });
   });
 }

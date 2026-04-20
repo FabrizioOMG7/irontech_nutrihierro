@@ -43,24 +43,41 @@ class AlertsPage extends ConsumerWidget {
         ],
       ),
       body: ResponsiveContent(
-        child: alerts.isEmpty
-            ? const EmptyStateView(
-                icon: Icons.notifications_off_outlined,
-                title: 'Sin alertas pendientes',
-                message: 'Cuando tengas nuevas alertas aparecerán aquí.',
-              )
-            : ListView.separated(
-                itemCount: alerts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (context, index) {
-                  final alert = alerts[index];
-                  return _AlertTile(
-                    alert: alert,
-                    onMarkAsRead: () =>
-                        ref.read(alertsProvider.notifier).markAsRead(alert.id),
-                  );
-                },
+        child: Column(
+          children: [
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('¿Cómo funcionan las alertas?'),
+                subtitle: const Text(
+                  'Se generan alertas programáticas por día (sin duplicados por fecha y tipo). Puedes marcarlas como pendientes/leídas.',
+                ),
               ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Expanded(
+              child: alerts.isEmpty
+                  ? const EmptyStateView(
+                      icon: Icons.notifications_off_outlined,
+                      title: 'Sin alertas pendientes',
+                      message: 'Cuando tengas nuevas alertas aparecerán aquí.',
+                    )
+                  : ListView.separated(
+                      itemCount: alerts.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppSpacing.sm),
+                      itemBuilder: (context, index) {
+                        final alert = alerts[index];
+                        return _AlertTile(
+                          alert: alert,
+                          onMarkAsRead: () =>
+                              ref.read(alertsProvider.notifier).markAsRead(alert.id),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -89,7 +106,9 @@ class _AlertTile extends StatelessWidget {
             fontWeight: alert.isRead ? FontWeight.w500 : FontWeight.w700,
           ),
         ),
-        subtitle: Text(alert.message),
+        subtitle: Text(
+          '${alert.message}\n${_formatDate(alert.createdAt)} • ${alert.isRead ? 'Leída' : 'Pendiente'}',
+        ),
         trailing: alert.isRead
             ? const Icon(Icons.check_circle_outline)
             : TextButton(
@@ -100,4 +119,10 @@ class _AlertTile extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatDate(DateTime date) {
+  final day = date.day.toString().padLeft(2, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  return '$day/$month/${date.year}';
 }
