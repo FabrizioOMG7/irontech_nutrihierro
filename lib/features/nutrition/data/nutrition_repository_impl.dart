@@ -40,6 +40,22 @@ class NutritionRepositoryImpl implements NutritionRepository {
       ironContent: 10,
       targetAge: AgeCategory.ollaFamiliar, // 12 a 23 meses
     ),
+    Recipe(
+      id: '5',
+      title: 'Arroz tapado con hígado y lentejas',
+      description: 'Receta para niños con buena aceptación. Acompaña con ensalada de tomate para sumar vitamina C.',
+      imageUrl: 'assets/images/arroz_tapado.png',
+      ironContent: 14,
+      targetAge: AgeCategory.escolar, // 24+ meses
+    ),
+    Recipe(
+      id: '6',
+      title: 'Tortilla de sangrecita con quinua',
+      description: 'Opción práctica para lonchera o cena, con hierro de alta biodisponibilidad.',
+      imageUrl: 'assets/images/tortilla_sangrecita.png',
+      ironContent: 16,
+      targetAge: AgeCategory.escolar, // 24+ meses
+    ),
   ];
 
   @override

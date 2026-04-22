@@ -12,6 +12,7 @@ class DailyRecord {
   final IronSourceType sourceType;
   final String description;
   final bool wasAccepted;
+  final double ironMg;
 
   DailyRecord({
     required this.id,
@@ -20,6 +21,7 @@ class DailyRecord {
     required this.sourceType,
     required this.description,
     this.wasAccepted = true,
+    this.ironMg = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -30,6 +32,7 @@ class DailyRecord {
       'sourceType': sourceType.name,
       'description': description,
       'wasAccepted': wasAccepted,
+      'ironMg': ironMg,
     };
   }
 
@@ -41,6 +44,7 @@ class DailyRecord {
       sourceType: _sourceTypeFromStorage(json['sourceType'] as String?),
       description: json['description'] as String,
       wasAccepted: json['wasAccepted'] as bool? ?? true,
+      ironMg: (json['ironMg'] as num?)?.toDouble() ?? 0,
     );
   }
 

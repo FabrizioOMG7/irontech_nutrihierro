@@ -11,16 +11,26 @@ import 'package:irontech_nutrihierro/features/info/presentation/providers/info_p
 import 'package:irontech_nutrihierro/features/nutrition/domain/recipe.dart';
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/nutrition_provider.dart';
 
-class InfoPage extends ConsumerWidget {
+class InfoPage extends ConsumerStatefulWidget {
   const InfoPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InfoPage> createState() => _InfoPageState();
+}
+
+class _InfoPageState extends ConsumerState<InfoPage> {
+  String _selectedCategory = 'Todos';
+
+  @override
+  Widget build(BuildContext context) {
+    final recipeHighlightsAsync = ref.watch(allRecipesProvider);
+    final articlesAsync = ref.watch(anemiaInfoArticlesProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Información')),
       body: ResponsiveContent(
         child: AsyncValueView(
-          value: ref.watch(anemiaInfoArticlesProvider),
+          value: articlesAsync,
           errorPrefix: 'No se pudo cargar información',
           loadingMessage: 'Cargando secciones...',
           dataBuilder: (articles) {
@@ -31,34 +41,197 @@ class InfoPage extends ConsumerWidget {
                 message: 'Pronto agregaremos más guías informativas.',
               );
             }
-            return ListView.separated(
-              itemCount: articles.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.restaurant_menu),
-                      title: const Text('Recetas saludables'),
-                      subtitle: const Text('Explora y visualiza recetas locales de hierro.'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.push('/info/recipes'),
-                    ),
-                  );
-                }
-                final article = articles[index - 1];
-                return Card(
+
+            final availableCategories = <String>{
+              'Todos',
+              ...articles.map(_inferArticleCategory),
+            }.toList(growable: false);
+            final filteredArticles = _selectedCategory == 'Todos'
+                ? articles
+                : articles
+                    .where(
+                      (article) =>
+                          _inferArticleCategory(article) == _selectedCategory,
+                    )
+                    .toList(growable: false);
+
+            return ListView(
+              children: [
+                Text(
+                  'Aprende y actúa en casa',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    for (final category in availableCategories)
+                      ChoiceChip(
+                        label: Text(category),
+                        selected: _selectedCategory == category,
+                        onSelected: (_) =>
+                            setState(() => _selectedCategory = category),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Card(
                   child: ListTile(
-                    leading: const Icon(Icons.article_outlined),
-                    title: Text(article.title),
-                    subtitle: const Text('Contenido para padres y cuidadores'),
+                    leading: const Icon(Icons.restaurant_menu),
+                    title: const Text('Recetas saludables'),
+                    subtitle: const Text(
+                      'Explora y visualiza recetas locales de hierro.',
+                    ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/info/${article.id}'),
+                    onTap: () => context.push('/info/recipes'),
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _InteractiveChecklistCard(
+                  onOpenRecipes: () => context.push('/info/recipes'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ...filteredArticles.map(
+                  (article) => Card(
+                    child: ExpansionTile(
+                      leading: const Icon(Icons.article_outlined),
+                      title: Text(article.title),
+                      subtitle: Text(
+                        '${_inferArticleCategory(article)} • Pulsa para ver resumen',
+                      ),
+                      childrenPadding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        0,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                      ),
+                      children: [
+                        Text(
+                          _summaryPreview(article.content),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: () => context.push('/info/${article.id}'),
+                            icon: const Icon(Icons.menu_book),
+                            label: const Text('Leer contenido completo'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                AsyncValueView(
+                  value: recipeHighlightsAsync,
+                  errorPrefix: 'No se pudo cargar destacados',
+                  loadingMessage: 'Cargando recetas destacadas...',
+                  dataBuilder: (recipes) {
+                    if (recipes.isEmpty) return const SizedBox.shrink();
+                    final topRecipes = recipes.take(3).toList(growable: false);
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Destacados de hoy',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            for (final recipe in topRecipes)
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.verified),
+                                title: Text(recipe.title),
+                                subtitle: Text(
+                                  '${_ageCategoryLabel(recipe.targetAge)} • ${recipe.ironContent} mg',
+                                ),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () =>
+                                    context.push('/info/recipes/${recipe.id}'),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _InteractiveChecklistCard extends StatefulWidget {
+  final VoidCallback onOpenRecipes;
+
+  const _InteractiveChecklistCard({required this.onOpenRecipes});
+
+  @override
+  State<_InteractiveChecklistCard> createState() => _InteractiveChecklistCardState();
+}
+
+class _InteractiveChecklistCardState extends State<_InteractiveChecklistCard> {
+  bool _mealWithIron = false;
+  bool _vitaminCCompanion = false;
+  bool _dailyRecordUpdated = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final checks = [_mealWithIron, _vitaminCCompanion, _dailyRecordUpdated];
+    final completed = checks.where((check) => check).length;
+    final progress = completed / checks.length;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Mini checklist del día', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.xs),
+            LinearProgressIndicator(value: progress),
+            const SizedBox(height: AppSpacing.sm),
+            CheckboxListTile(
+              value: _mealWithIron,
+              contentPadding: EdgeInsets.zero,
+              onChanged: (value) => setState(() => _mealWithIron = value ?? false),
+              title: const Text('Incluí una comida rica en hierro'),
+            ),
+            CheckboxListTile(
+              value: _vitaminCCompanion,
+              contentPadding: EdgeInsets.zero,
+              onChanged: (value) =>
+                  setState(() => _vitaminCCompanion = value ?? false),
+              title: const Text('La combiné con vitamina C'),
+            ),
+            CheckboxListTile(
+              value: _dailyRecordUpdated,
+              contentPadding: EdgeInsets.zero,
+              onChanged: (value) =>
+                  setState(() => _dailyRecordUpdated = value ?? false),
+              title: const Text('Actualicé el registro diario'),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text('Avance: $completed/3 acciones'),
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: widget.onOpenRecipes,
+                icon: const Icon(Icons.local_dining),
+                label: const Text('Ir a recetas relacionadas'),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -163,6 +336,24 @@ Recipe? _findRecipeById(List<Recipe> recipes, String id) {
     if (recipe.id == id) return recipe;
   }
   return null;
+}
+
+String _inferArticleCategory(AnemiaInfoArticle article) {
+  final title = article.title.toLowerCase();
+  if (title.contains('síntoma') || title.contains('consecuencia')) {
+    return 'Síntomas';
+  }
+  if (title.contains('prevención') || title.contains('recomendaciones')) {
+    return 'Prevención';
+  }
+  return 'Básicos';
+}
+
+String _summaryPreview(String content) {
+  final clean = content.replaceAll('\n', ' ').trim();
+  const maxLength = 180;
+  if (clean.length <= maxLength) return clean;
+  return '${clean.substring(0, maxLength)}...';
 }
 
 class _RecipeIronBadge extends StatelessWidget {
