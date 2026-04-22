@@ -36,6 +36,12 @@ Conectar Firebase en una siguiente iteración sin romper el avance UI/mock actua
    - `imageUrl`
    - `createdAt`
 
+6. `users/{userId}/children/{childId}/daily_requirements/{date}`
+   - `estimatedIronGoalMg`
+   - `consumedIronMg`
+   - `progressPercent`
+   - `status` (low, in_progress, completed)
+
 ## Reglas mínimas (base)
 
 - Lectura de `recipes` y `foods`: pública (o autenticada según estrategia de producto).
@@ -57,3 +63,4 @@ allow read, write: if request.auth != null && request.auth.uid == userId;
    - `ProfileRepository` (migración opcional por fases)
 3. Cambiar providers a implementación Firestore manteniendo la misma interfaz.
 4. Mantener fallback mock para desarrollo offline/demo.
+5. Migrar reglas locales de requerimiento diario (hoy mock por edad) a configuración centralizada en backend.

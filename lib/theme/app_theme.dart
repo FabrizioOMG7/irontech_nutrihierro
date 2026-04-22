@@ -90,12 +90,18 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: colorScheme.primary.withAlpha(26),
+        indicatorColor: AppColors.primary,
+        iconTheme: MaterialStateProperty.resolveWith((states) {
+          final selected = states.contains(MaterialState.selected);
+          return IconThemeData(
+            color: selected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+          );
+        }),
         labelTextStyle: MaterialStateProperty.resolveWith((states) {
           final selected = states.contains(MaterialState.selected);
           return TextStyle(
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            color: selected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
           );
         }),
       ),

@@ -54,6 +54,7 @@ class NutritionPage extends ConsumerWidget {
                   name: child.name,
                   ageLabel: child.formattedAge,
                   nutritionCategory: child.nutritionCategory,
+                  profileType: child.ageInMonths >= 24 ? 'Niño/a' : 'Infante',
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
@@ -112,11 +113,13 @@ class _ChildHeader extends StatelessWidget {
   final String name;
   final String ageLabel;
   final String nutritionCategory;
+  final String profileType;
 
   const _ChildHeader({
     required this.name,
     required this.ageLabel,
     required this.nutritionCategory,
+    required this.profileType,
   });
 
   @override
@@ -138,11 +141,13 @@ class _ChildHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Recetas para $name', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Perfil activo: $name', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: AppSpacing.xs),
                   Text('Edad: $ageLabel', style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: AppSpacing.xs),
                   Text('Etapa: $nutritionCategory', style: Theme.of(context).textTheme.bodyMedium),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('Tipo: $profileType', style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
             ),

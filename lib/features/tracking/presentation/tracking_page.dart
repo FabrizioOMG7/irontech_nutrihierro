@@ -8,6 +8,7 @@ import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_record.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_records_query.dart';
+import 'package:irontech_nutrihierro/features/tracking/domain/iron_goal.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -59,6 +60,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
       sourceType: formData.sourceType,
       description: formData.description,
       wasAccepted: formData.wasAccepted,
+      ironMg: formData.ironMg,
     );
 
     await ref.read(trackingControllerProvider.notifier).addRecord(newRecord);
@@ -147,18 +149,39 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                     errorPrefix: 'Error al cargar registro',
                     loadingMessage: 'Cargando registros de la fecha seleccionada...',
                     dataBuilder: (records) {
+                      final consumedIronMg = records
+                          .where((record) => record.wasAccepted)
+                          .fold<double>(0, (sum, record) => sum + record.ironMg);
+                      final dailyGoalMg = estimatedDailyIronGoalMg(
+                        child.ageInMonths,
+                      );
                       if (records.isEmpty) {
-                        return EmptyStateView(
-                          icon: Icons.calendar_month,
-                          title: 'Sin registros en ${formatDateDdMmYyyy(_historyDate)}',
-                          message:
-                              'Usa "Registrar ingesta" para guardar registros y consultarlos por fecha.',
+                        return ListView(
+                          children: [
+                            _DailyIronProgressCard(
+                              consumedIronMg: consumedIronMg,
+                              goalIronMg: dailyGoalMg,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            EmptyStateView(
+                              icon: Icons.calendar_month,
+                              title:
+                                  'Sin registros en ${formatDateDdMmYyyy(_historyDate)}',
+                              message:
+                                  'Usa "Registrar ingesta" para guardar registros y consultarlos por fecha.',
+                            ),
+                          ],
                         );
                       }
-                      return ListView.builder(
-                        itemCount: records.length,
-                        itemBuilder: (context, index) =>
-                            _RecordTile(record: records[index]),
+                      return ListView(
+                        children: [
+                          _DailyIronProgressCard(
+                            consumedIronMg: consumedIronMg,
+                            goalIronMg: dailyGoalMg,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          for (final record in records) _RecordTile(record: record),
+                        ],
                       );
                     },
                   ),
@@ -212,7 +235,7 @@ class _RecordTile extends StatelessWidget {
         ),
         title: Text(record.description),
         subtitle: Text(
-          '${formatDateDdMmYyyy(record.date)} • ${_sourceLabel(record.sourceType)}',
+          '${formatDateDdMmYyyy(record.date)} • ${_sourceLabel(record.sourceType)}${record.ironMg > 0 ? ' • ${record.ironMg.toStringAsFixed(1)} mg' : ''}',
         ),
         trailing: Icon(
           accepted ? Icons.check_circle : Icons.info_outline,
@@ -237,12 +260,14 @@ class _RecordFormData {
   final IronSourceType sourceType;
   final String description;
   final bool wasAccepted;
+  final double ironMg;
 
   const _RecordFormData({
     required this.date,
     required this.sourceType,
     required this.description,
     required this.wasAccepted,
+    required this.ironMg,
   });
 }
 
@@ -257,25 +282,27 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _quickNoteController = TextEditingController();
+  final _customIronMgController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   IronSourceType _selectedSource = IronSourceType.food;
   bool _wasAccepted = true;
   String? _selectedPresetFoodOption;
   final Set<String> _selectedPresetFoods = <String>{};
-  static const List<String> _presetFoods = [
-    'Sangrecita',
-    'Hígado de pollo',
-    'Bazo',
-    'Lentejas',
-    'Pescado',
-    'Espinaca',
-    'Quinua',
-  ];
+  static const Map<String, double> _presetFoods = {
+    'Sangrecita': 7.2,
+    'Hígado de pollo': 5.8,
+    'Bazo': 6.1,
+    'Lentejas': 3.3,
+    'Pescado': 1.4,
+    'Espinaca': 2.7,
+    'Quinua': 2.8,
+  };
 
   @override
   void dispose() {
     _descriptionController.dispose();
     _quickNoteController.dispose();
+    _customIronMgController.dispose();
     super.dispose();
   }
 
@@ -308,7 +335,16 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
 
     final manualDescription = _descriptionController.text.trim();
     final quickNote = _quickNoteController.text.trim();
+    final customIronMg = double.tryParse(
+          _customIronMgController.text.trim().replaceAll(',', '.'),
+        ) ??
+        0;
     final descriptionParts = <String>[];
+    final ironFromPresetFoods = _selectedPresetFoods.fold<double>(
+      0,
+      (sum, food) => sum + (_presetFoods[food] ?? 0),
+    );
+    final totalEstimatedIronMg = ironFromPresetFoods + customIronMg;
 
     if (_selectedSource == IronSourceType.food && _selectedPresetFoods.isNotEmpty) {
       descriptionParts.add('Alimentos seleccionados: ${_selectedPresetFoods.join(', ')}');
@@ -321,13 +357,14 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
     }
 
     Navigator.of(context).pop(
-      _RecordFormData(
-        date: _selectedDate,
-        sourceType: _selectedSource,
-        description: descriptionParts.join(' • '),
-        wasAccepted: _wasAccepted,
-      ),
-    );
+        _RecordFormData(
+          date: _selectedDate,
+          sourceType: _selectedSource,
+          description: descriptionParts.join(' • '),
+          wasAccepted: _wasAccepted,
+          ironMg: totalEstimatedIronMg,
+        ),
+      );
   }
 
   @override
@@ -409,6 +446,7 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                         value: _selectedPresetFoodOption,
                         hint: const Text('Selecciona un alimento'),
                         items: _presetFoods
+                            .keys
                             .map(
                               (food) => DropdownMenuItem<String>(
                                 value: food,
@@ -447,6 +485,27 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
                   ),
                 const SizedBox(height: AppSpacing.md),
               ],
+              TextFormField(
+                controller: _customIronMgController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: 'Hierro estimado adicional (mg)',
+                  hintText: 'Ejemplo: 2.5',
+                ),
+                validator: (value) {
+                  final raw = value?.trim() ?? '';
+                  if (raw.isEmpty) return null;
+                  final parsed = double.tryParse(raw.replaceAll(',', '.'));
+                  if (parsed == null || parsed < 0) {
+                    return 'Ingresa un número válido de mg';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
               TextFormField(
                 controller: _descriptionController,
                 minLines: 2,
@@ -508,6 +567,76 @@ class _RecordFormSheetState extends State<_RecordFormSheet> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyIronProgressCard extends StatelessWidget {
+  final double consumedIronMg;
+  final double goalIronMg;
+
+  const _DailyIronProgressCard({
+    required this.consumedIronMg,
+    required this.goalIronMg,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = goalIronMg <= 0
+        ? 1.0
+        : (consumedIronMg / goalIronMg).clamp(0.0, 1.0).toDouble();
+    final status = ironGoalStatus(consumedMg: consumedIronMg, goalMg: goalIronMg);
+
+    final (label, color, feedback) = switch (status) {
+      IronGoalStatus.low => (
+          'Bajo',
+          AppColors.warning,
+          'Aún falta reforzar una comida rica en hierro hoy.'
+        ),
+      IronGoalStatus.inProgress => (
+          'En progreso',
+          AppColors.info,
+          'Buen avance. Puedes sumar una opción rica en hierro con vitamina C.'
+        ),
+      IronGoalStatus.completed => (
+          'Cumplido',
+          AppColors.success,
+          '¡Meta diaria cubierta! Mantén constancia durante la semana.'
+        ),
+    };
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Control diario de hierro',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Objetivo estimado: ${goalIronMg.toStringAsFixed(1)} mg • Consumido: ${consumedIronMg.toStringAsFixed(1)} mg',
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            LinearProgressIndicator(value: progress, color: color),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Icon(Icons.flag_circle, color: color, size: 18),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'Estado: $label (${(progress * 100).toStringAsFixed(0)}%)',
+                  style: TextStyle(color: color, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(feedback),
+          ],
         ),
       ),
     );
