@@ -21,7 +21,15 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
         await restoreActiveChildId(ref);
-      } catch (_) {
+      } catch (error, stackTrace) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'profile_selector_page',
+            context: ErrorDescription('while restoring active profile id'),
+          ),
+        );
       }
     });
   }
