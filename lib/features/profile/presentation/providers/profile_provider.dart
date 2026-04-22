@@ -20,7 +20,7 @@ final childrenListProvider = AsyncNotifierProvider<ChildrenListNotifier, List<Ch
   return ChildrenListNotifier();
 });
 
-const String activeChildStorageKey = 'active_child_id_v1';
+const String _activeChildStorageKey = 'active_child_id_v1';
 
 final activeChildIdProvider = StateProvider<String?>((ref) => null);
 
@@ -37,18 +37,18 @@ final activeChildProvider = Provider<Child?>((ref) {
 
 Future<void> restoreActiveChildId(WidgetRef ref) async {
   final prefs = await SharedPreferences.getInstance();
-  ref.read(activeChildIdProvider.notifier).state = prefs.getString(activeChildStorageKey);
+  ref.read(activeChildIdProvider.notifier).state = prefs.getString(_activeChildStorageKey);
 }
 
 Future<void> setActiveChildId(WidgetRef ref, String childId) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(activeChildStorageKey, childId);
+  await prefs.setString(_activeChildStorageKey, childId);
   ref.read(activeChildIdProvider.notifier).state = childId;
 }
 
 Future<void> clearActiveChildId(WidgetRef ref) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.remove(activeChildStorageKey);
+  await prefs.remove(_activeChildStorageKey);
   ref.read(activeChildIdProvider.notifier).state = null;
 }
 
