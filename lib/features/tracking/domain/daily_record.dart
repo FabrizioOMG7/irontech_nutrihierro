@@ -22,10 +22,42 @@ class DailyRecord {
     this.wasAccepted = true,
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'childId': childId,
+      'date': date.toIso8601String(),
+      'sourceType': sourceType.name,
+      'description': description,
+      'wasAccepted': wasAccepted,
+    };
+  }
+
+  factory DailyRecord.fromJson(Map<String, dynamic> json) {
+    return DailyRecord(
+      id: json['id'] as String,
+      childId: json['childId'] as String,
+      date: DateTime.parse(json['date'] as String),
+      sourceType: _sourceTypeFromStorage(json['sourceType'] as String?),
+      description: json['description'] as String,
+      wasAccepted: json['wasAccepted'] as bool? ?? true,
+    );
+  }
+
   // Método para saber si este registro pertenece a una fecha específica
   bool isFromDate(DateTime targetDate) {
     return date.year == targetDate.year &&
         date.month == targetDate.month &&
         date.day == targetDate.day;
+  }
+}
+
+IronSourceType _sourceTypeFromStorage(String? value) {
+  switch (value) {
+    case 'supplement':
+      return IronSourceType.supplement;
+    case 'food':
+    default:
+      return IronSourceType.food;
   }
 }

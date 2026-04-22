@@ -37,7 +37,14 @@ class NutritionPage extends ConsumerWidget {
               message: 'Ve al registro de niño/a para activar recomendaciones personalizadas.',
             );
           }
-          final child = children.first;
+          final child = ref.watch(activeChildProvider);
+          if (child == null) {
+            return EmptyStateView(
+              icon: Icons.switch_account,
+              title: 'Selecciona un perfil activo',
+              message: 'Ingresa con un perfil para ver recomendaciones personalizadas.',
+            );
+          }
           final category = Recipe.getCategoryForMonths(child.ageInMonths);
           return ResponsiveContent(
             child: Column(

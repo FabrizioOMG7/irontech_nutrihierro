@@ -28,7 +28,17 @@ class ChildProfilePage extends ConsumerWidget {
               ),
             );
           }
-          return ResponsiveContent(child: _ChildProfileForm(child: children.first));
+          final child = ref.watch(activeChildProvider);
+          if (child == null) {
+            return const ResponsiveContent(
+              child: EmptyStateView(
+                icon: Icons.switch_account,
+                title: 'Selecciona un perfil activo',
+                message: 'Elige un perfil para editar sus datos.',
+              ),
+            );
+          }
+          return ResponsiveContent(child: _ChildProfileForm(child: child));
         },
       ),
     );

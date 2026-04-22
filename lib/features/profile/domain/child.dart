@@ -27,6 +27,24 @@ class Child {
     required this.gender,
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'birthDate': birthDate.toIso8601String(),
+      'gender': gender.name,
+    };
+  }
+
+  factory Child.fromJson(Map<String, dynamic> json) {
+    return Child(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      birthDate: DateTime.parse(json['birthDate'] as String),
+      gender: genderFromStorage(json['gender'] as String?),
+    );
+  }
+
   // ==========================================================
   // LÓGICA DE NEGOCIO (Domain Logic)
   // ==========================================================

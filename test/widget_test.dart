@@ -10,7 +10,7 @@ void main() {
       ),
     );
 
-    // Verificamos que la ruta inicial de registro cargue correctamente
-    expect(find.text('Registrar Niño/a'), findsOneWidget);
+    // Verificamos que la ruta inicial de selector cargue correctamente
+    expect(find.text('Seleccionar perfil'), findsOneWidget);
   });
 }

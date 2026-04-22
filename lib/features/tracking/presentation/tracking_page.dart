@@ -103,7 +103,14 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
             );
           }
 
-          final child = children.first;
+          final child = ref.watch(activeChildProvider);
+          if (child == null) {
+            return const EmptyStateView(
+              icon: Icons.switch_account,
+              title: 'Selecciona un perfil activo',
+              message: 'Elige un perfil para registrar y revisar su seguimiento.',
+            );
+          }
           final query = DailyRecordsQuery(childId: child.id, date: _historyDate);
 
           return ResponsiveContent(
@@ -163,12 +170,13 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
       ),
       floatingActionButton: childrenAsync.maybeWhen(
         data: (children) {
-          if (children.isEmpty) return null;
+          final child = ref.watch(activeChildProvider);
+          if (children.isEmpty || child == null) return null;
           return FloatingActionButton.extended(
             onPressed: () => _openRecordForm(
               context,
               ref,
-              children.first.id,
+              child.id,
               trackingState.isLoading,
             ),
             icon: const Icon(Icons.add),
