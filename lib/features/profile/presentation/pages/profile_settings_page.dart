@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
+import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
 
-class ProfileSettingsPage extends StatelessWidget {
+class ProfileSettingsPage extends ConsumerWidget {
   const ProfileSettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Configuración')),
@@ -27,6 +29,21 @@ class ProfileSettingsPage extends StatelessWidget {
               title: 'Alertas',
               subtitle: 'Gestiona alertas y marca recordatorios como leídos.',
               onTap: () => context.push('/alerts'),
+            ),
+            _SettingsItem(
+              icon: Icons.people_alt_outlined,
+              title: 'Perfiles infantiles',
+              subtitle: 'Crear más perfiles y elegir perfil activo.',
+              onTap: () => context.push('/profile-selector'),
+            ),
+            _SettingsItem(
+              icon: Icons.logout,
+              title: 'Salir del perfil actual',
+              subtitle: 'Vuelve al selector sin borrar datos guardados.',
+              onTap: () async {
+                await clearActiveChildId(ref);
+                if (context.mounted) context.go('/profile-selector');
+              },
             ),
           ],
         ),

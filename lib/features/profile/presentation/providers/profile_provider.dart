@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/child.dart';
 import '../../domain/repositories/profile_repository.dart';
 
@@ -18,6 +19,38 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
 final childrenListProvider = AsyncNotifierProvider<ChildrenListNotifier, List<Child>>(() {
   return ChildrenListNotifier();
 });
+
+const String _activeChildStorageKey = 'active_child_id_v1';
+
+final activeChildIdProvider = StateProvider<String?>((ref) => null);
+
+final activeChildProvider = Provider<Child?>((ref) {
+  final children = ref.watch(childrenListProvider).valueOrNull ?? const <Child>[];
+  if (children.isEmpty) return null;
+  final activeId = ref.watch(activeChildIdProvider);
+  if (activeId == null || activeId.isEmpty) return children.first;
+  for (final child in children) {
+    if (child.id == activeId) return child;
+  }
+  return children.first;
+});
+
+Future<void> restoreActiveChildId(WidgetRef ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  ref.read(activeChildIdProvider.notifier).state = prefs.getString(_activeChildStorageKey);
+}
+
+Future<void> setActiveChildId(WidgetRef ref, String childId) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_activeChildStorageKey, childId);
+  ref.read(activeChildIdProvider.notifier).state = childId;
+}
+
+Future<void> clearActiveChildId(WidgetRef ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove(_activeChildStorageKey);
+  ref.read(activeChildIdProvider.notifier).state = null;
+}
 
 class ChildrenListNotifier extends AsyncNotifier<List<Child>> {
   @override

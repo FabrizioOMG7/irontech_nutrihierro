@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_record.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_records_query.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/monthly_records_query.dart';
@@ -5,25 +9,41 @@ import 'package:irontech_nutrihierro/features/tracking/domain/tracking_repositor
 
 /// Implementación temporal en RAM para probar el calendario sin Firebase.
 class TrackingRepositoryMock implements TrackingRepository {
-  // Nuestra lista en memoria RAM (válida para la sesión actual de la app).
-  final List<DailyRecord> _memoryDb = [];
+  static const String _recordsStorageKey = 'tracking_records_v1';
+
+  Future<List<DailyRecord>> _readRecords() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_recordsStorageKey);
+    if (raw == null || raw.isEmpty) return <DailyRecord>[];
+    final decoded = jsonDecode(raw) as List<dynamic>;
+    return decoded
+        .map((item) => DailyRecord.fromJson(item as Map<String, dynamic>))
+        .toList(growable: true);
+  }
+
+  Future<void> _writeRecords(List<DailyRecord> records) async {
+    final prefs = await SharedPreferences.getInstance();
+    final payload = records.map((item) => item.toJson()).toList(growable: false);
+    await prefs.setString(_recordsStorageKey, jsonEncode(payload));
+  }
 
   @override
   Future<void> saveRecord(DailyRecord record) async {
-    await Future.delayed(
-      const Duration(milliseconds: 300),
-    ); // Simulamos la carga
-    _memoryDb.add(record);
+    await Future.delayed(const Duration(milliseconds: 120));
+    final memoryDb = await _readRecords();
+    memoryDb.add(record);
+    await _writeRecords(memoryDb);
   }
 
   @override
   Future<List<DailyRecord>> getRecordsForChildInMonth(
     MonthlyRecordsQuery query,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 120));
+    final memoryDb = await _readRecords();
     // Filtramos para devolver solo los registros de ese niño en ese mes y año específico
     final records =
-        _memoryDb
+        memoryDb
             .where(
               (r) =>
                   r.childId == query.childId &&
@@ -39,9 +59,10 @@ class TrackingRepositoryMock implements TrackingRepository {
   Future<List<DailyRecord>> getRecordsForChildInDate(
     DailyRecordsQuery query,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 120));
+    final memoryDb = await _readRecords();
     final records =
-        _memoryDb
+        memoryDb
             .where(
               (r) =>
                   r.childId == query.childId &&
@@ -54,6 +75,8 @@ class TrackingRepositoryMock implements TrackingRepository {
 
   @override
   Future<void> deleteRecord(String recordId) async {
-    _memoryDb.removeWhere((r) => r.id == recordId);
+    final memoryDb = await _readRecords();
+    memoryDb.removeWhere((r) => r.id == recordId);
+    await _writeRecords(memoryDb);
   }
 }

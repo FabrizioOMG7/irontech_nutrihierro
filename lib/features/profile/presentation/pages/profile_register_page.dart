@@ -62,6 +62,7 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
       setState(() => _isSaving = true);
       try {
         await ref.read(childrenListProvider.notifier).addChild(newChild);
+        await setActiveChildId(ref, newChild.id);
         if (mounted) context.go('/home');
       } catch (_) {
         if (!mounted) return;

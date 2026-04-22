@@ -6,6 +6,7 @@ import 'package:irontech_nutrihierro/features/info/presentation/pages/info_page.
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/pages/nutrition_page.dart';
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/pages/recommended_foods_page.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/pages/child_profile_page.dart';
+import 'package:irontech_nutrihierro/features/profile/presentation/pages/profile_selector_page.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/tracking_page.dart';
 
@@ -15,9 +16,13 @@ import '../widgets/main_layout.dart'; // <-- El cascarón que acabamos de crear
 
 final appRouterByAgeProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/profile-register',
+    initialLocation: '/profile-selector',
     routes: [
       // 1. RUTA FUERA DEL CASCARÓN (Pantalla completa, sin menú inferior)
+      GoRoute(
+        path: '/profile-selector',
+        builder: (context, state) => const ProfileSelectorPage(),
+      ),
       GoRoute(
         path: '/profile-register',
         builder: (context, state) => const ProfileRegisterPage(),
@@ -77,6 +82,18 @@ final appRouterByAgeProvider = Provider<GoRouter>((ref) {
                 path: '/info',
                 builder: (context, state) => const InfoPage(),
                 routes: [
+                  GoRoute(
+                    path: 'recipes',
+                    builder: (context, state) => const InfoRecipesListPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':recipeId',
+                        builder: (context, state) => InfoRecipeDetailPage(
+                          recipeId: state.pathParameters['recipeId']!,
+                        ),
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: ':articleId',
                     builder: (context, state) => InfoDetailPage(

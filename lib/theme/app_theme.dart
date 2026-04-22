@@ -11,12 +11,14 @@ class AppTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.light,
+      dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
     ).copyWith(
       primary: AppColors.primary,
+      onPrimary: Colors.white,
       secondary: AppColors.secondary,
       surface: AppColors.surface,
+      surfaceContainerHighest: const Color(0xFFF2F4F7),
       error: AppColors.error,
-      onPrimary: Colors.white,
     );
 
     final baseTextTheme = GoogleFonts.interTextTheme();
@@ -87,6 +89,7 @@ class AppTheme {
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.surface,
         indicatorColor: colorScheme.primary.withAlpha(26),
         labelTextStyle: MaterialStateProperty.resolveWith((states) {
           final selected = states.contains(MaterialState.selected);
