@@ -65,7 +65,7 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Puedes crear y cambiar entre varios hijos sin perder su historial.',
+                  'Puedes crear y cambiar entre varios perfiles sin perder su historial.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: AppSpacing.md),
