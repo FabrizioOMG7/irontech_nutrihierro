@@ -18,7 +18,12 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
   @override
   void initState() {
     super.initState();
-    Future(() => restoreActiveChildId(ref));
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await restoreActiveChildId(ref);
+      } catch (_) {
+      }
+    });
   }
 
   Future<void> _selectProfile(String childId) async {
