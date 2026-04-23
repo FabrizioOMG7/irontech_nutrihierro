@@ -379,7 +379,7 @@ class InfoRecipeDetailPage extends ConsumerWidget {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          'Hierro aproximado: ${recipe.ironContent} mg por porción.',
+                          'Hierro aproximado: ${recipe.ironContent} mg.',
                         ),
                         if (recipe.ironContribution.isNotEmpty) ...[
                           const SizedBox(height: AppSpacing.xs),
