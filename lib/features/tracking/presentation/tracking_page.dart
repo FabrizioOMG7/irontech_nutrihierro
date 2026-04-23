@@ -44,11 +44,12 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
   Future<void> _addPortion({
     required String childId,
     required MinsaFoodPortion food,
+    required DateTime selectedDate,
   }) async {
     final record = DailyRecord(
       id: const Uuid().v4(),
       childId: childId,
-      date: _normalizedDate(_historyDate),
+      date: _normalizedDate(selectedDate),
       sourceType: IronSourceType.food,
       description: food.name,
       wasAccepted: true,
@@ -181,6 +182,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                                 onAddPortion: () => _addPortion(
                                   childId: child.id,
                                   food: food,
+                                  selectedDate: _historyDate,
                                 ),
                               ),
                           ],

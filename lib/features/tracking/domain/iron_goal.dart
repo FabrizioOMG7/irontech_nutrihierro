@@ -7,7 +7,7 @@ const double _goal10Mg = 10.0;
 
 double estimatedDailyIronGoalMg(int ageInMonths) {
   // Metas MINSA:
-  // 6-11 meses: 11 mg/día | 1-3 años: 7 mg/día | 4-5 años: 10 mg/día.
+  // 6-11 meses: 11 mg/día | 12-47 meses (1-3 años): 7 mg/día | 4-5 años: 10 mg/día.
   if (ageInMonths < _minimumTrackedAgeMonths) return 0;
   if (ageInMonths <= _goal11MgUpperLimitMonths) return _goal11Mg;
   if (ageInMonths <= _goal7MgUpperLimitMonths) return _goal7Mg;
