@@ -58,6 +58,15 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
     await ref.read(trackingControllerProvider.notifier).addRecord(record);
   }
 
+  Map<String, int> _buildPortionCount(List<DailyRecord> records) {
+    final map = <String, int>{};
+    for (final record in records) {
+      if (!record.wasAccepted) continue;
+      map.update(record.description, (value) => value + 1, ifAbsent: () => 1);
+    }
+    return map;
+  }
+
   @override
   Widget build(BuildContext context) {
     final childrenAsync = ref.watch(childrenListProvider);
@@ -184,7 +193,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                       child: const Padding(
                         padding: EdgeInsets.all(AppSpacing.md),
                         child: Text(
-                          'Información educativa basada en guías del MINSA. No reemplaza el control médico',
+                          'Información educativa basada en guías del MINSA. No reemplaza el control médico.',
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -214,15 +223,6 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
       ),
     );
   }
-}
-
-Map<String, int> _buildPortionCount(List<DailyRecord> records) {
-  final map = <String, int>{};
-  for (final record in records) {
-    if (!record.wasAccepted) continue;
-    map.update(record.description, (value) => value + 1, ifAbsent: () => 1);
-  }
-  return map;
 }
 
 class _FoodPortionTile extends StatelessWidget {
