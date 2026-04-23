@@ -408,10 +408,14 @@ Recipe? _findRecipeById(List<Recipe> recipes, String id) {
 }
 
 String _imageFileName(String imageUrl) {
-  final normalized = imageUrl.replaceAll('\\', '/');
-  final segments = normalized.split('/');
-  final last = segments.isNotEmpty ? segments.last : normalized;
-  return last.isEmpty ? normalized : last;
+  final normalized = imageUrl.replaceAll('\\', '/').trim();
+  if (normalized.isEmpty) return '';
+  final withoutTrailingSlash = normalized.endsWith('/')
+      ? normalized.substring(0, normalized.length - 1)
+      : normalized;
+  final separatorIndex = withoutTrailingSlash.lastIndexOf('/');
+  if (separatorIndex < 0) return withoutTrailingSlash;
+  return withoutTrailingSlash.substring(separatorIndex + 1);
 }
 
 String _inferArticleCategory(AnemiaInfoArticle article) {

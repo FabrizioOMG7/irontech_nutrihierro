@@ -2,15 +2,15 @@ class MinsaFoodPortion {
   final String key;
   final String name;
   final double ironMgPerPortion;
+  final String portionReference;
 
   const MinsaFoodPortion({
     required this.key,
     required this.name,
     required this.ironMgPerPortion,
+    this.portionReference = '2 cucharadas',
   });
 }
-
-const String minsaPortionReferenceLabel = '2 cucharadas por porción';
 
 const List<MinsaFoodPortion> minsaFoodPortions = [
   MinsaFoodPortion(

@@ -160,7 +160,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Alimentos MINSA ($minsaPortionReferenceLabel)',
+                              'Alimentos MINSA',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: AppSpacing.sm),
@@ -245,7 +245,7 @@ class _FoodPortionTile extends StatelessWidget {
         leading: const Icon(Icons.restaurant_menu, color: AppColors.primary),
         title: Text(food.name),
         subtitle: Text(
-          '${food.ironMgPerPortion.toStringAsFixed(1)} mg por porción • Porciones hoy: $currentPortions',
+          '${food.ironMgPerPortion.toStringAsFixed(1)} mg (${food.portionReference}) • Porciones hoy: $currentPortions',
         ),
         trailing: FilledButton.icon(
           onPressed: isSaving ? null : onAddPortion,

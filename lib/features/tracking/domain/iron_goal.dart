@@ -23,7 +23,7 @@ IronGoalStatus ironGoalStatus({
   if (goalMg <= 0) return IronGoalStatus.completed;
   final ratio = consumedMg / goalMg;
   if (ratio >= 1) return IronGoalStatus.completed;
-  if (ratio > 0) return IronGoalStatus.inProgress;
+  if (ratio >= 0.4) return IronGoalStatus.inProgress;
   return IronGoalStatus.low;
 }
 

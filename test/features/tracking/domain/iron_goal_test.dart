@@ -15,11 +15,11 @@ void main() {
   group('ironGoalStatus', () {
     test('clasifica bajo / en progreso / cumplido', () {
       expect(
-        ironGoalStatus(consumedMg: 0, goalMg: 10),
+        ironGoalStatus(consumedMg: 1, goalMg: 10),
         IronGoalStatus.low,
       );
       expect(
-        ironGoalStatus(consumedMg: 1, goalMg: 10),
+        ironGoalStatus(consumedMg: 6, goalMg: 10),
         IronGoalStatus.inProgress,
       );
       expect(
