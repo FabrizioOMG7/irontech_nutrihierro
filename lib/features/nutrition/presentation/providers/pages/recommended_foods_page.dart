@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
@@ -32,10 +33,14 @@ class RecommendedFoodsPage extends ConsumerWidget {
               separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) {
                 final recipe = recipes[index];
-                return IronCard(
-                  title: recipe.title,
-                  description: recipe.description,
-                  trailingWidget: _IronBadge(ironContent: recipe.ironContent),
+                return InkWell(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  onTap: () => context.push('/info/recipes/${recipe.id}'),
+                  child: IronCard(
+                    title: recipe.title,
+                    description: recipe.description,
+                    trailingWidget: _IronBadge(ironContent: recipe.ironContent),
+                  ),
                 );
               },
             );

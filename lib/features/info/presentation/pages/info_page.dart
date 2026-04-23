@@ -308,14 +308,83 @@ class InfoRecipeDetailPage extends ConsumerWidget {
                 Text(recipe.title, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
                 Card(
+                  child: Container(
+                    height: 180,
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.restaurant_menu, size: 42),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          recipe.imageUrl.isNotEmpty
+                              ? 'Imagen referencial: ${_imageFileName(recipe.imageUrl)}'
+                              : 'Imagen referencial de la receta',
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Card(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          'Resumen',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(recipe.description),
                         const SizedBox(height: AppSpacing.md),
-                        Text('Hierro aproximado: ${recipe.ironContent} mg'),
+                        Text(
+                          'Ingredientes',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        if (recipe.ingredients.isEmpty)
+                          const Text('Ingredientes disponibles próximamente.')
+                        else
+                          for (final ingredient in recipe.ingredients)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                              child: Text('• $ingredient'),
+                            ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          'Preparación',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        if (recipe.preparationSteps.isEmpty)
+                          const Text('Preparación disponible próximamente.')
+                        else
+                          for (var i = 0; i < recipe.preparationSteps.length; i++)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                              child: Text('${i + 1}. ${recipe.preparationSteps[i]}'),
+                            ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          'Aporte de hierro',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'Hierro aproximado: ${recipe.ironContent} mg.',
+                        ),
+                        if (recipe.ironContribution.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(recipe.ironContribution),
+                        ],
                         const SizedBox(height: AppSpacing.sm),
                         Text('Etapa sugerida: ${_ageCategoryLabel(recipe.targetAge)}'),
                       ],
@@ -336,6 +405,17 @@ Recipe? _findRecipeById(List<Recipe> recipes, String id) {
     if (recipe.id == id) return recipe;
   }
   return null;
+}
+
+String _imageFileName(String imageUrl) {
+  final normalized = imageUrl.replaceAll('\\', '/').trim();
+  if (normalized.isEmpty) return '';
+  final withoutTrailingSlash = normalized.endsWith('/')
+      ? normalized.substring(0, normalized.length - 1)
+      : normalized;
+  final separatorIndex = withoutTrailingSlash.lastIndexOf('/');
+  if (separatorIndex < 0) return withoutTrailingSlash;
+  return withoutTrailingSlash.substring(separatorIndex + 1);
 }
 
 String _inferArticleCategory(AnemiaInfoArticle article) {

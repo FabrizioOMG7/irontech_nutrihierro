@@ -17,6 +17,9 @@ class Recipe {
   final String imageUrl; // URL de la imagen en Firebase Storage o un asset local
   final int ironContent; // Miligramos de hierro aproximados (opcional, para UI)
   final AgeCategory targetAge; // A qué edad va dirigida esta receta
+  final List<String> ingredients;
+  final List<String> preparationSteps;
+  final String ironContribution;
 
   Recipe({
     required this.id,
@@ -25,6 +28,9 @@ class Recipe {
     required this.imageUrl,
     required this.ironContent,
     required this.targetAge,
+    this.ingredients = const <String>[],
+    this.preparationSteps = const <String>[],
+    this.ironContribution = '',
   });
 
   // Lógica de negocio sencilla: ¿Esta receta es apta para un niño de X meses?
