@@ -2,7 +2,7 @@ double estimatedDailyIronGoalMg(int ageInMonths) {
   if (ageInMonths < 6) return 0;
   if (ageInMonths <= 11) return 11.0;
   if (ageInMonths <= 47) return 7.0;
-  return 10;
+  return 10.0;
 }
 
 enum IronGoalStatus { low, inProgress, completed }

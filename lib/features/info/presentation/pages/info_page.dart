@@ -323,7 +323,7 @@ class InfoRecipeDetailPage extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           recipe.imageUrl.isNotEmpty
-                              ? 'Imagen referencial: ${recipe.imageUrl.split('/').last}'
+                              ? 'Imagen referencial: ${_imageFileName(recipe.imageUrl)}'
                               : 'Imagen referencial de la receta',
                           textAlign: TextAlign.center,
                         ),
@@ -405,6 +405,13 @@ Recipe? _findRecipeById(List<Recipe> recipes, String id) {
     if (recipe.id == id) return recipe;
   }
   return null;
+}
+
+String _imageFileName(String imageUrl) {
+  final normalized = imageUrl.replaceAll('\\', '/');
+  final segments = normalized.split('/');
+  final last = segments.isNotEmpty ? segments.last : normalized;
+  return last.isEmpty ? normalized : last;
 }
 
 String _inferArticleCategory(AnemiaInfoArticle article) {

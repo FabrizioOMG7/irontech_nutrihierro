@@ -160,7 +160,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Alimentos MINSA (2 cucharadas por porción)',
+                              'Alimentos MINSA ($minsaPortionReferenceLabel)',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: AppSpacing.sm),

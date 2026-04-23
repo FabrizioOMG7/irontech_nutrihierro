@@ -10,6 +10,8 @@ class MinsaFoodPortion {
   });
 }
 
+const String minsaPortionReferenceLabel = '2 cucharadas por porción';
+
 const List<MinsaFoodPortion> minsaFoodPortions = [
   MinsaFoodPortion(
     key: 'sangrecita_pollo',
