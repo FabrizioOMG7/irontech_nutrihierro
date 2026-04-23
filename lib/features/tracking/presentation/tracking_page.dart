@@ -9,6 +9,7 @@ import 'package:irontech_nutrihierro/features/profile/presentation/providers/pro
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_record.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_records_query.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/iron_goal.dart';
+import 'package:irontech_nutrihierro/features/tracking/domain/minsa_food_portion.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -36,34 +37,25 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
     }
   }
 
-  Future<void> _openRecordForm(
-    BuildContext context,
-    WidgetRef ref,
-    String childId,
-    bool isSaving,
-  ) async {
-    if (isSaving) return;
+  DateTime _normalizedDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
 
-    final formData = await showModalBottomSheet<_RecordFormData>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (context) => const _RecordFormSheet(),
-    );
-
-    if (formData == null) return;
-
-    final newRecord = DailyRecord(
+  Future<void> _addPortion({
+    required String childId,
+    required MinsaFoodPortion food,
+  }) async {
+    final record = DailyRecord(
       id: const Uuid().v4(),
       childId: childId,
-      date: formData.date,
-      sourceType: formData.sourceType,
-      description: formData.description,
-      wasAccepted: formData.wasAccepted,
-      ironMg: formData.ironMg,
+      date: _normalizedDate(_historyDate),
+      sourceType: IronSourceType.food,
+      description: food.name,
+      wasAccepted: true,
+      ironMg: food.ironMgPerPortion,
     );
 
-    await ref.read(trackingControllerProvider.notifier).addRecord(newRecord);
+    await ref.read(trackingControllerProvider.notifier).addRecord(record);
   }
 
   @override
@@ -75,14 +67,14 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
       if (previous?.isLoading == true && next.hasValue) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registro guardado correctamente.'),
+            content: Text('Porción registrada y guardada localmente.'),
             backgroundColor: AppColors.success,
           ),
         );
       } else if (next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('No se pudo guardar el registro: ${next.error}'),
+            content: Text('No se pudo guardar la porción: ${next.error}'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -90,7 +82,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Registro Diario')),
+      appBar: AppBar(title: const Text('Seguimiento de hierro')),
       body: AsyncValueView(
         value: childrenAsync,
         errorPrefix: 'Error al cargar perfil',
@@ -113,102 +105,153 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
               message: 'Elige un perfil para registrar y revisar su seguimiento.',
             );
           }
+
           final query = DailyRecordsQuery(childId: child.id, date: _historyDate);
 
           return ResponsiveContent(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Card(
-                  color: Theme.of(context).colorScheme.primary.withAlpha(15),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Seguimiento de ${child.name}',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          onTap: _pickHistoryDate,
-                          leading: const Icon(Icons.calendar_today_outlined),
-                          title: const Text('Ver historial por fecha'),
-                          subtitle: Text(formatDateDdMmYyyy(_historyDate)),
-                          trailing: const Icon(Icons.arrow_drop_down),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: AsyncValueView(
-                    value: ref.watch(dailyRecordsProvider(query)),
-                    errorPrefix: 'Error al cargar registro',
-                    loadingMessage: 'Cargando registros de la fecha seleccionada...',
-                    dataBuilder: (records) {
-                      final consumedIronMg = records
-                          .where((record) => record.wasAccepted)
-                          .fold<double>(0, (sum, record) => sum + record.ironMg);
-                      final dailyGoalMg = estimatedDailyIronGoalMg(
-                        child.ageInMonths,
-                      );
-                      if (records.isEmpty) {
-                        return ListView(
+            child: AsyncValueView(
+              value: ref.watch(dailyRecordsProvider(query)),
+              errorPrefix: 'Error al cargar registro',
+              loadingMessage: 'Cargando historial por fecha...',
+              dataBuilder: (records) {
+                final goalIronMg = estimatedDailyIronGoalMg(child.ageInMonths);
+                final consumedIronMg = records.fold<double>(
+                  0,
+                  (sum, record) => sum + (record.wasAccepted ? record.ironMg : 0),
+                );
+                final portionsByFood = _buildPortionCount(records);
+
+                return ListView(
+                  children: [
+                    Card(
+                      color: Theme.of(context).colorScheme.primary.withAlpha(15),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _DailyIronProgressCard(
-                              consumedIronMg: consumedIronMg,
-                              goalIronMg: dailyGoalMg,
+                            Text(
+                              'Seguimiento diario de ${child.name}',
+                              style: Theme.of(context).textTheme.headlineSmall,
                             ),
                             const SizedBox(height: AppSpacing.sm),
-                            EmptyStateView(
-                              icon: Icons.calendar_month,
-                              title:
-                                  'Sin registros en ${formatDateDdMmYyyy(_historyDate)}',
-                              message:
-                                  'Usa "Registrar ingesta" para guardar registros y consultarlos por fecha.',
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              onTap: _pickHistoryDate,
+                              leading: const Icon(Icons.calendar_today_outlined),
+                              title: const Text('Historial por fecha'),
+                              subtitle: Text(formatDateDdMmYyyy(_historyDate)),
+                              trailing: const Icon(Icons.arrow_drop_down),
                             ),
                           ],
-                        );
-                      }
-                      return ListView(
-                        children: [
-                          _DailyIronProgressCard(
-                            consumedIronMg: consumedIronMg,
-                            goalIronMg: dailyGoalMg,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          for (final record in records) _RecordTile(record: record),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _DailyIronProgressCard(
+                      consumedIronMg: consumedIronMg,
+                      goalIronMg: goalIronMg,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Alimentos MINSA (2 cucharadas por porción)',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            for (final food in minsaFoodPortions)
+                              _FoodPortionTile(
+                                food: food,
+                                currentPortions: portionsByFood[food.name] ?? 0,
+                                isSaving: trackingState.isLoading,
+                                onAddPortion: () => _addPortion(
+                                  childId: child.id,
+                                  food: food,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Card(
+                      color: Theme.of(context).colorScheme.secondary.withAlpha(22),
+                      child: const Padding(
+                        padding: EdgeInsets.all(AppSpacing.md),
+                        child: Text(
+                          'Información educativa basada en guías del MINSA. No reemplaza el control médico',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (records.isEmpty)
+                      EmptyStateView(
+                        icon: Icons.calendar_month,
+                        title: 'Sin registros en ${formatDateDdMmYyyy(_historyDate)}',
+                        message:
+                            'Usa “Añadir porción” para empezar a registrar el consumo de hoy.',
+                      )
+                    else ...[
+                      Text(
+                        'Registros del día',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      for (final record in records) _RecordTile(record: record),
+                    ],
+                  ],
+                );
+              },
             ),
           );
         },
       ),
-      floatingActionButton: childrenAsync.maybeWhen(
-        data: (children) {
-          final child = ref.watch(activeChildProvider);
-          if (children.isEmpty || child == null) return null;
-          return FloatingActionButton.extended(
-            onPressed: () => _openRecordForm(
-              context,
-              ref,
-              child.id,
-              trackingState.isLoading,
-            ),
-            icon: const Icon(Icons.add),
-            label: Text(
-              trackingState.isLoading ? 'Guardando...' : 'Registrar ingesta',
-            ),
-          );
-        },
-        orElse: () => null,
+    );
+  }
+}
+
+Map<String, int> _buildPortionCount(List<DailyRecord> records) {
+  final map = <String, int>{};
+  for (final record in records) {
+    if (!record.wasAccepted) continue;
+    map.update(record.description, (value) => value + 1, ifAbsent: () => 1);
+  }
+  return map;
+}
+
+class _FoodPortionTile extends StatelessWidget {
+  final MinsaFoodPortion food;
+  final int currentPortions;
+  final bool isSaving;
+  final VoidCallback onAddPortion;
+
+  const _FoodPortionTile({
+    required this.food,
+    required this.currentPortions,
+    required this.isSaving,
+    required this.onAddPortion,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.restaurant_menu, color: AppColors.primary),
+        title: Text(food.name),
+        subtitle: Text(
+          '${food.ironMgPerPortion.toStringAsFixed(1)} mg por porción • Porciones hoy: $currentPortions',
+        ),
+        trailing: FilledButton.icon(
+          onPressed: isSaving ? null : onAddPortion,
+          icon: const Icon(Icons.add),
+          label: const Text('Añadir porción'),
+        ),
       ),
     );
   }
@@ -221,352 +264,13 @@ class _RecordTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accepted = record.wasAccepted;
-    final statusColor = accepted ? AppColors.success : AppColors.warning;
-
     return Card(
       child: ListTile(
         minVerticalPadding: AppSpacing.sm,
-        leading: Icon(
-          record.sourceType == IronSourceType.food
-              ? Icons.restaurant
-              : Icons.local_hospital,
-          color: AppColors.primary,
-        ),
+        leading: const Icon(Icons.check_circle, color: AppColors.success),
         title: Text(record.description),
         subtitle: Text(
-          '${formatDateDdMmYyyy(record.date)} • ${_sourceLabel(record.sourceType)}${record.ironMg > 0 ? ' • ${record.ironMg.toStringAsFixed(1)} mg' : ''}',
-        ),
-        trailing: Icon(
-          accepted ? Icons.check_circle : Icons.info_outline,
-          color: statusColor,
-        ),
-      ),
-    );
-  }
-}
-
-String _sourceLabel(IronSourceType sourceType) {
-  switch (sourceType) {
-    case IronSourceType.food:
-      return 'Alimento';
-    case IronSourceType.supplement:
-      return 'Suplemento';
-  }
-}
-
-class _RecordFormData {
-  final DateTime date;
-  final IronSourceType sourceType;
-  final String description;
-  final bool wasAccepted;
-  final double ironMg;
-
-  const _RecordFormData({
-    required this.date,
-    required this.sourceType,
-    required this.description,
-    required this.wasAccepted,
-    required this.ironMg,
-  });
-}
-
-class _RecordFormSheet extends StatefulWidget {
-  const _RecordFormSheet();
-
-  @override
-  State<_RecordFormSheet> createState() => _RecordFormSheetState();
-}
-
-class _RecordFormSheetState extends State<_RecordFormSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _descriptionController = TextEditingController();
-  final _quickNoteController = TextEditingController();
-  final _customIronMgController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
-  IronSourceType _selectedSource = IronSourceType.food;
-  bool _wasAccepted = true;
-  String? _selectedPresetFoodOption;
-  final Set<String> _selectedPresetFoods = <String>{};
-  static const Map<String, double> _presetFoods = {
-    'Sangrecita': 7.2,
-    'Hígado de pollo': 5.8,
-    'Bazo': 6.1,
-    'Lentejas': 3.3,
-    'Pescado': 1.4,
-    'Espinaca': 2.7,
-    'Quinua': 2.8,
-  };
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _quickNoteController.dispose();
-    _customIronMgController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: monthStart,
-      lastDate: now,
-    );
-
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
-
-  void _addPresetFoodSelection() {
-    final selected = _selectedPresetFoodOption;
-    if (selected == null) return;
-    setState(() {
-      _selectedPresetFoods.add(selected);
-      _selectedPresetFoodOption = null;
-    });
-  }
-
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-
-    final manualDescription = _descriptionController.text.trim();
-    final quickNote = _quickNoteController.text.trim();
-    final customIronMg = double.tryParse(
-          _customIronMgController.text.trim().replaceAll(',', '.'),
-        ) ??
-        0;
-    final descriptionParts = <String>[];
-    final ironFromPresetFoods = _selectedPresetFoods.fold<double>(
-      0,
-      (sum, food) => sum + (_presetFoods[food] ?? 0),
-    );
-    final totalEstimatedIronMg = ironFromPresetFoods + customIronMg;
-
-    if (_selectedSource == IronSourceType.food && _selectedPresetFoods.isNotEmpty) {
-      descriptionParts.add('Alimentos seleccionados: ${_selectedPresetFoods.join(', ')}');
-    }
-    if (manualDescription.isNotEmpty) {
-      descriptionParts.add(manualDescription);
-    }
-    if (quickNote.isNotEmpty) {
-      descriptionParts.add('Nota/cantidad: $quickNote');
-    }
-
-    Navigator.of(context).pop(
-        _RecordFormData(
-          date: _selectedDate,
-          sourceType: _selectedSource,
-          description: descriptionParts.join(' • '),
-          wasAccepted: _wasAccepted,
-          ironMg: totalEstimatedIronMg,
-        ),
-      );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        bottomInset + AppSpacing.md,
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Nueva ingesta',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Card(
-                child: ListTile(
-                  onTap: _pickDate,
-                  leading: const Icon(Icons.calendar_today_outlined),
-                  title: const Text('Fecha de registro'),
-                  subtitle: Text(formatDateDdMmYyyy(_selectedDate)),
-                  trailing: const Icon(Icons.arrow_drop_down),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              const Text(
-                'Tipo de ingesta',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SegmentedButton<IronSourceType>(
-                segments: const [
-                  ButtonSegment<IronSourceType>(
-                    value: IronSourceType.food,
-                    icon: Icon(Icons.restaurant),
-                    label: Text('Alimento'),
-                  ),
-                  ButtonSegment<IronSourceType>(
-                    value: IronSourceType.supplement,
-                    icon: Icon(Icons.local_hospital),
-                    label: Text('Suplemento'),
-                  ),
-                ],
-                selected: {_selectedSource},
-                onSelectionChanged: (selected) {
-                  if (selected.isNotEmpty) {
-                    setState(() {
-                      _selectedSource = selected.first;
-                      if (_selectedSource == IronSourceType.supplement) {
-                        _selectedPresetFoods.clear();
-                        _selectedPresetFoodOption = null;
-                        _quickNoteController.clear();
-                      }
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: AppSpacing.md),
-              if (_selectedSource == IronSourceType.food) ...[
-                const Text(
-                  'Alimentos predeterminados',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedPresetFoodOption,
-                        hint: const Text('Selecciona un alimento'),
-                        items: _presetFoods
-                            .keys
-                            .map(
-                              (food) => DropdownMenuItem<String>(
-                                value: food,
-                                child: Text(food),
-                              ),
-                            )
-                            .toList(growable: false),
-                        onChanged: (value) =>
-                            setState(() => _selectedPresetFoodOption = value),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    IconButton.filled(
-                      onPressed: _selectedPresetFoodOption == null
-                          ? null
-                          : _addPresetFoodSelection,
-                      icon: const Icon(Icons.add),
-                      tooltip: 'Agregar alimento',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                if (_selectedPresetFoods.isNotEmpty)
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: _selectedPresetFoods
-                        .map(
-                          (food) => InputChip(
-                            label: Text(food),
-                            onDeleted: () =>
-                                setState(() => _selectedPresetFoods.remove(food)),
-                          ),
-                        )
-                        .toList(growable: false),
-                  ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-              TextFormField(
-                controller: _customIronMgController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Hierro estimado adicional (mg)',
-                  hintText: 'Ejemplo: 2.5',
-                ),
-                validator: (value) {
-                  final raw = value?.trim() ?? '';
-                  if (raw.isEmpty) return null;
-                  final parsed = double.tryParse(raw.replaceAll(',', '.'));
-                  if (parsed == null || parsed < 0) {
-                    return 'Ingresa un número válido de mg';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextFormField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 3,
-                textInputAction: TextInputAction.done,
-                decoration: InputDecoration(
-                  labelText: _selectedSource == IronSourceType.food
-                      ? 'Descripción manual (opcional)'
-                      : 'Descripción',
-                  hintText: _selectedSource == IronSourceType.food
-                      ? 'Ejemplo: agregar arroz y zanahoria'
-                      : 'Ejemplo: Sulfato ferroso, 10 gotas',
-                ),
-                validator: (value) {
-                  final trimmed = value?.trim() ?? '';
-                  if (_selectedSource == IronSourceType.food &&
-                      _selectedPresetFoods.isNotEmpty &&
-                      trimmed.isEmpty) {
-                    return null;
-                  }
-                  if (trimmed.isEmpty) return 'Ingresa una descripción';
-                  if (trimmed.length < 6) {
-                    return 'Describe con un poco más de detalle';
-                  }
-                  return null;
-                },
-              ),
-              if (_selectedSource == IronSourceType.food) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Puedes combinar seleccionados + texto manual para alimentos no listados.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: _quickNoteController,
-                  textInputAction: TextInputAction.done,
-                  decoration: const InputDecoration(
-                    labelText: 'Cantidad/nota (opcional)',
-                    hintText: 'Ejemplo: 2 cucharadas',
-                  ),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.sm),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                value: _wasAccepted,
-                onChanged: (value) => setState(() => _wasAccepted = value),
-                title: const Text('¿El niño/a aceptó la ingesta?'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _submit,
-                  icon: const Icon(Icons.save_outlined),
-                  label: const Text('Guardar registro'),
-                ),
-              ),
-            ],
-          ),
+          '${formatDateDdMmYyyy(record.date)} • ${record.ironMg.toStringAsFixed(1)} mg',
         ),
       ),
     );
@@ -588,23 +292,12 @@ class _DailyIronProgressCard extends StatelessWidget {
         ? 1.0
         : (consumedIronMg / goalIronMg).clamp(0.0, 1.0).toDouble();
     final status = ironGoalStatus(consumedMg: consumedIronMg, goalMg: goalIronMg);
+    final missing = ironMissingMg(consumedMg: consumedIronMg, goalMg: goalIronMg);
 
-    final (label, color, feedback) = switch (status) {
-      IronGoalStatus.low => (
-          'Bajo',
-          AppColors.warning,
-          'Aún falta reforzar una comida rica en hierro hoy.'
-        ),
-      IronGoalStatus.inProgress => (
-          'En progreso',
-          AppColors.info,
-          'Buen avance. Puedes sumar una opción rica en hierro con vitamina C.'
-        ),
-      IronGoalStatus.completed => (
-          'Cumplido',
-          AppColors.success,
-          '¡Meta diaria cubierta! Mantén constancia durante la semana.'
-        ),
+    final (label, color) = switch (status) {
+      IronGoalStatus.low => ('Pendiente', AppColors.warning),
+      IronGoalStatus.inProgress => ('En progreso', AppColors.info),
+      IronGoalStatus.completed => ('Cumplido', AppColors.success),
     };
 
     return Card(
@@ -614,28 +307,26 @@ class _DailyIronProgressCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Control diario de hierro',
+              'Meta diaria de hierro',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Objetivo estimado: ${goalIronMg.toStringAsFixed(1)} mg • Consumido: ${consumedIronMg.toStringAsFixed(1)} mg',
+              'Consumido: ${consumedIronMg.toStringAsFixed(1)} mg • Meta: ${goalIronMg.toStringAsFixed(1)} mg',
             ),
             const SizedBox(height: AppSpacing.sm),
             LinearProgressIndicator(value: progress, color: color),
             const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Icon(Icons.flag_circle, color: color, size: 18),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'Estado: $label (${(progress * 100).toStringAsFixed(0)}%)',
-                  style: TextStyle(color: color, fontWeight: FontWeight.w600),
-                ),
-              ],
+            Text(
+              'Estado: $label (${(progress * 100).toStringAsFixed(0)}%)',
+              style: TextStyle(color: color, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(feedback),
+            Text(
+              missing <= 0
+                  ? '¡Objetivo diario alcanzado!'
+                  : 'Faltan ${missing.toStringAsFixed(1)} mg para cumplir la meta de hoy.',
+            ),
           ],
         ),
       ),

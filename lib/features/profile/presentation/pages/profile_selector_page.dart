@@ -107,6 +107,14 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
                     'Puedes crear y cambiar entre varios perfiles sin perder su historial.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
+                  if (hasActiveChild) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    FilledButton.icon(
+                      onPressed: _handleBackNavigation,
+                      icon: const Icon(Icons.home_outlined),
+                      label: const Text('Volver a pantalla principal'),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.md),
                   for (final child in children)
                     Card(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/core/router/app_router.dart';
 import 'package:irontech_nutrihierro/theme/app_theme.dart';
@@ -22,6 +23,16 @@ class MainApp extends ConsumerWidget {
       title: 'IronTech NutriHierro',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      locale: const Locale('es', 'PE'),
+      supportedLocales: const [
+        Locale('es', 'PE'),
+        Locale('es'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: router,
     );
   }

@@ -90,10 +90,14 @@ class NutritionPage extends ConsumerWidget {
                         itemCount: recipes.length,
                         itemBuilder: (context, index) {
                           final recipe = recipes[index];
-                          return IronCard(
-                            title: recipe.title,
-                            description: recipe.description,
-                            trailingWidget: _IronBadge(ironContent: recipe.ironContent),
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            onTap: () => context.push('/info/recipes/${recipe.id}'),
+                            child: IronCard(
+                              title: recipe.title,
+                              description: recipe.description,
+                              trailingWidget: _IronBadge(ironContent: recipe.ironContent),
+                            ),
                           );
                         },
                       );

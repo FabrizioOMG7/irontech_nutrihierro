@@ -37,6 +37,12 @@ class ProfileSettingsPage extends ConsumerWidget {
               onTap: () => context.push('/profile-selector'),
             ),
             _SettingsItem(
+              icon: Icons.home_outlined,
+              title: 'Ir a pantalla principal',
+              subtitle: 'Regresa al inicio sin cambiar de perfil.',
+              onTap: () => context.go('/home'),
+            ),
+            _SettingsItem(
               icon: Icons.logout,
               title: 'Salir del perfil actual',
               subtitle: 'Vuelve al selector sin borrar datos guardados.',

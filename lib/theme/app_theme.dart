@@ -46,6 +46,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 1,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
@@ -90,18 +91,19 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.primary,
         iconTheme: MaterialStateProperty.resolveWith((states) {
           final selected = states.contains(MaterialState.selected);
           return IconThemeData(
-            color: selected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+            color: selected ? colorScheme.onPrimary : AppColors.textSecondary,
           );
         }),
         labelTextStyle: MaterialStateProperty.resolveWith((states) {
           final selected = states.contains(MaterialState.selected);
           return TextStyle(
             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+            color: selected ? colorScheme.onPrimary : AppColors.textSecondary,
           );
         }),
       ),
