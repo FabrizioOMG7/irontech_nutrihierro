@@ -7,8 +7,12 @@ class MinsaFoodPortion {
   final String unit;
   final FoodCategory category;
 
-  /// Alias para compatibilidad con código existente.
+  /// Alias de compatibilidad. Preferir [ironMgPerUnit] en código nuevo.
+  @Deprecated('Usar ironMgPerUnit en su lugar.')
   double get ironMgPerPortion => ironMgPerUnit;
+
+  /// Alias de compatibilidad. Preferir [unit] en código nuevo.
+  @Deprecated('Usar unit en su lugar.')
   String get portionReference => unit;
 
   const MinsaFoodPortion({

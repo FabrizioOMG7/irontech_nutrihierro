@@ -13,6 +13,9 @@ import 'package:irontech_nutrihierro/features/tracking/domain/minsa_food_portion
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:uuid/uuid.dart';
 
+const int _maxPortionQuantity = 10;
+const double _stepperButtonSize = 36;
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers de categoría
 // ──────────────────────────────────────────────────────────────────────────────
@@ -524,7 +527,7 @@ class _QuantityStepper extends StatelessWidget {
         _StepperButton(
           icon: Icons.add,
           onPressed:
-              quantity < 10 ? () => onChanged(quantity + 1) : null,
+              quantity < _maxPortionQuantity ? () => onChanged(quantity + 1) : null,
         ),
       ],
     );
@@ -540,11 +543,12 @@ class _StepperButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 36,
-      height: 36,
+      width: _stepperButtonSize,
+      height: _stepperButtonSize,
       child: IconButton.outlined(
         padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        constraints: const BoxConstraints(
+            minWidth: _stepperButtonSize, minHeight: _stepperButtonSize),
         iconSize: 18,
         icon: Icon(icon),
         onPressed: onPressed,
