@@ -27,7 +27,6 @@ class ProfileRepositoryMock implements ProfileRepository {
 
   @override
   Future<void> saveChild(Child child) async {
-    await Future.delayed(const Duration(milliseconds: 150));
     final memoryDb = await _readChildren();
     // Si el niño ya existe lo actualizamos, si no, lo agregamos
     final index = memoryDb.indexWhere((c) => c.id == child.id);
@@ -41,7 +40,6 @@ class ProfileRepositoryMock implements ProfileRepository {
 
   @override
   Future<List<Child>> getChildren() async {
-    await Future.delayed(const Duration(milliseconds: 100));
     final memoryDb = await _readChildren();
     return List<Child>.unmodifiable(memoryDb);
   }

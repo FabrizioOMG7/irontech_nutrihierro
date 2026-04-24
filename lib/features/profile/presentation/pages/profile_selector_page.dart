@@ -18,20 +18,8 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        await restoreActiveChildId(ref);
-      } catch (error, stackTrace) {
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: error,
-            stack: stackTrace,
-            library: 'profile_selector_page',
-            context: ErrorDescription('while restoring active profile id'),
-          ),
-        );
-      }
-    });
+    // Removed PostFrameCallback - let activeChildProvider handle initialization
+    // This prevents redundant SharedPreferences calls during startup
   }
 
   Future<void> _selectProfile(String childId) async {

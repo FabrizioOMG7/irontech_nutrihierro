@@ -29,7 +29,6 @@ class TrackingRepositoryMock implements TrackingRepository {
 
   @override
   Future<void> saveRecord(DailyRecord record) async {
-    await Future.delayed(const Duration(milliseconds: 120));
     final memoryDb = await _readRecords();
     memoryDb.add(record);
     await _writeRecords(memoryDb);
@@ -39,7 +38,6 @@ class TrackingRepositoryMock implements TrackingRepository {
   Future<List<DailyRecord>> getRecordsForChildInMonth(
     MonthlyRecordsQuery query,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 120));
     final memoryDb = await _readRecords();
     // Filtramos para devolver solo los registros de ese niño en ese mes y año específico
     final records =
@@ -59,7 +57,6 @@ class TrackingRepositoryMock implements TrackingRepository {
   Future<List<DailyRecord>> getRecordsForChildInDate(
     DailyRecordsQuery query,
   ) async {
-    await Future.delayed(const Duration(milliseconds: 120));
     final memoryDb = await _readRecords();
     final records =
         memoryDb

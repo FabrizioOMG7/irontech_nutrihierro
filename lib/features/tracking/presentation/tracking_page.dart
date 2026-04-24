@@ -92,7 +92,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
       sourceType: IronSourceType.food,
       description: food.name,
       wasAccepted: true,
-      ironMg: food.ironMgPerUnit * quantity,
+      ironMg: food.defaultPortion.ironMg * quantity,
     );
     await ref.read(trackingControllerProvider.notifier).addRecord(record);
   }
@@ -375,9 +375,9 @@ class _CategoryHeader extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Card de alimento — layout responsive sin ListTile
+// Card de alimento — layout responsive mejorado con múltiples unidades
 // ──────────────────────────────────────────────────────────────────────────────
-class _FoodPortionCard extends StatelessWidget {
+class _FoodPortionCard extends StatefulWidget {
   final MinsaFoodPortion food;
   final int quantity;
   final int portionsTodayCount;
@@ -395,97 +395,204 @@ class _FoodPortionCard extends StatelessWidget {
   });
 
   @override
+  State<_FoodPortionCard> createState() => _FoodPortionCardState();
+}
+
+class _FoodPortionCardState extends State<_FoodPortionCard> {
+  late FoodPortionOption _selectedPortion;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPortion = widget.food.defaultPortion;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final ironTotal = food.ironMgPerUnit * quantity;
+    final ironTotal = _selectedPortion.ironMg * widget.quantity;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      elevation: 1,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Nombre del alimento
+            // Header: Nombre del alimento con descripción
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.restaurant_menu,
-                    size: 18, color: AppColors.primary),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: Text(
-                    food.name,
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
-
-            // Hierro por unidad
-            Text(
-              '${food.ironMgPerUnit.toStringAsFixed(1)} mg / ${food.unit}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Stepper + total estimado
-            Row(
-              children: [
-                Text('Cantidad:', style: theme.textTheme.bodyMedium),
-                const SizedBox(width: AppSpacing.sm),
-                _QuantityStepper(
-                  quantity: quantity,
-                  onChanged: onQuantityChanged,
-                ),
-                const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
+                  padding: const EdgeInsets.all(AppSpacing.xs),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(20),
+                    color: AppColors.primary.withAlpha(15),
                     borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
-                  child: Text(
-                    '≈ ${ironTotal.toStringAsFixed(1)} mg',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  child: const Icon(
+                    Icons.restaurant_menu,
+                    size: 24,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.food.name,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (widget.food.description != null) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          widget.food.description!,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.md),
+
+            // Selector de unidad de medida (si hay múltiples opciones)
+            if (widget.food.portions.length > 1) ...[
+              Text(
+                'Unidad de medida:',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: widget.food.portions
+                      .map((portion) => Padding(
+                            padding: const EdgeInsets.only(right: AppSpacing.xs),
+                            child: FilterChip(
+                              selected: _selectedPortion == portion,
+                              onSelected: (_) {
+                                setState(() {
+                                  _selectedPortion = portion;
+                                  // Reset quantity cuando cambia la unidad
+                                  widget.onQuantityChanged(1);
+                                });
+                              },
+                              label: Text(portion.label),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.surface,
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ] else ...[
+              Text(
+                '${_selectedPortion.ironMg.toStringAsFixed(1)} mg / ${_selectedPortion.label}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+
+            // Cantidad + Hierro total
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Cantidad:',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      _QuantityStepper(
+                        quantity: widget.quantity,
+                        onChanged: widget.onQuantityChanged,
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Hierro aprox.',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        border: Border.all(
+                          color: AppColors.primary.withAlpha(50),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        '${ironTotal.toStringAsFixed(1)} mg',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
 
             // Botón añadir + badge porciones de hoy
             Row(
               children: [
-                if (portionsTodayCount > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.sm),
-                    child: Chip(
-                      avatar: const Icon(Icons.check_circle, size: 16),
-                      label: Text('Hoy: $portionsTodayCount'),
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize:
-                          MaterialTapTargetSize.shrinkWrap,
+                if (widget.portionsTodayCount > 0)
+                  Chip(
+                    avatar: const Icon(Icons.check_circle, size: 16),
+                    label: Text('Hoy: ${widget.portionsTodayCount}'),
+                    backgroundColor: Colors.green.withAlpha(25),
+                    labelStyle: TextStyle(
+                      color: Colors.green[700],
+                      fontWeight: FontWeight.w600,
                     ),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 const Spacer(),
                 FilledButton.icon(
-                  onPressed: isSaving ? null : onAddPortion,
+                  onPressed: widget.isSaving ? null : widget.onAddPortion,
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Añadir'),
+                  label: const Text('Registrar'),
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.compact,
+                    backgroundColor: AppColors.primary,
                   ),
                 ),
               ],

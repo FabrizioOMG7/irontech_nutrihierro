@@ -2,13 +2,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/minsa_food_portion.dart';
 
 void main() {
-  test('catálogo MINSA tiene alimentos y valores exactos por porción', () {
-    expect(minsaFoodPortions, hasLength(4));
+  test('catálogo MINSA tiene alimentos con múltiples opciones de medida', () {
+    expect(minsaFoodPortions.length, greaterThan(20)); // Más de 20 alimentos
 
-    final byName = {for (final food in minsaFoodPortions) food.name: food.ironMgPerPortion};
-    expect(byName['Sangrecita de pollo'], 8.0);
-    expect(byName['Bazo de res'], 8.5);
-    expect(byName['Hígado de pollo'], 2.5);
-    expect(byName['Carnes rojas'], 0.6);
+    // Verificar que la sangrecita de pollo existe y tiene múltiples opciones
+    final sangrecita = minsaFoodPortions.firstWhere(
+      (f) => f.key == 'sangrecita_pollo',
+    );
+    expect(sangrecita.name, 'Sangrecita de pollo');
+    expect(sangrecita.portions.length, greaterThan(1));
+    expect(sangrecita.defaultPortion.ironMg, 8.0);
+    expect(sangrecita.description, isNotEmpty);
+  });
+
+  test('cada alimento tiene al menos una opción de medida', () {
+    for (final food in minsaFoodPortions) {
+      expect(food.portions, isNotEmpty);
+      expect(food.defaultPortion.label, isNotEmpty);
+      expect(food.defaultPortion.ironMg, greaterThan(0));
+    }
   });
 }

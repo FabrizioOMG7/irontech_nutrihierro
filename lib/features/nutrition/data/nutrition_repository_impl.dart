@@ -126,15 +126,12 @@ class NutritionRepositoryImpl implements NutritionRepository {
 
   @override
   Future<List<Recipe>> getRecipesByCategory(AgeCategory category) async {
-    // Simulamos un retraso de internet de 1 segundo para probar las animaciones de carga
-    await Future.delayed(const Duration(seconds: 1));
     // Filtramos la lista para devolver solo las que coinciden con la edad
     return _mockDatabase.where((recipe) => recipe.targetAge == category).toList();
   }
 
   @override
   Future<List<Recipe>> getAllRecipes() async {
-    await Future.delayed(const Duration(seconds: 1));
     return _mockDatabase;
   }
 }
