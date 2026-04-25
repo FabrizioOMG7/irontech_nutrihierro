@@ -115,7 +115,7 @@ class _InfoPageState extends ConsumerState<InfoPage> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
-                            onPressed: () => context.push('/info/${article.id}'),
+                            onPressed: () => context.push('/info/article/${article.id}'),
                             icon: const Icon(Icons.menu_book),
                             label: const Text('Leer contenido completo'),
                           ),

@@ -39,6 +39,24 @@ final appRouterByAgeProvider = Provider<GoRouter>((ref) {
         path: '/recommended-foods',
         builder: (context, state) => const RecommendedFoodsPage(),
       ),
+      GoRoute(
+        path: '/info/recipes',
+        builder: (context, state) => const InfoRecipesListPage(),
+        routes: [
+          GoRoute(
+            path: ':recipeId',
+            builder: (context, state) => InfoRecipeDetailPage(
+              recipeId: state.pathParameters['recipeId']!,
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/info/article/:articleId',
+        builder: (context, state) => InfoDetailPage(
+          articleId: state.pathParameters['articleId']!,
+        ),
+      ),
 
       // 2. RUTAS DENTRO DEL CASCARÓN (Con barra de navegación)
       StatefulShellRoute.indexedStack(
@@ -81,26 +99,6 @@ final appRouterByAgeProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/info',
                 builder: (context, state) => const InfoPage(),
-                routes: [
-                  GoRoute(
-                    path: 'recipes',
-                    builder: (context, state) => const InfoRecipesListPage(),
-                    routes: [
-                      GoRoute(
-                        path: ':recipeId',
-                        builder: (context, state) => InfoRecipeDetailPage(
-                          recipeId: state.pathParameters['recipeId']!,
-                        ),
-                      ),
-                    ],
-                  ),
-                  GoRoute(
-                    path: ':articleId',
-                    builder: (context, state) => InfoDetailPage(
-                      articleId: state.pathParameters['articleId']!,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
