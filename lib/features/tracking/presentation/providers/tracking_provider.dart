@@ -43,4 +43,17 @@ class TrackingController extends AsyncNotifier<void> {
       state = AsyncValue.error(e, stack);
     }
   }
+
+  Future<void> deleteRecord(String recordId) async {
+    state = const AsyncValue.loading();
+    try {
+      await ref.read(trackingRepositoryProvider).deleteRecord(recordId);
+      // Invalida los proveedores para refrescar la UI
+      ref.invalidate(monthlyRecordsProvider);
+      ref.invalidate(dailyRecordsProvider);
+      state = const AsyncValue.data(null);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
 }

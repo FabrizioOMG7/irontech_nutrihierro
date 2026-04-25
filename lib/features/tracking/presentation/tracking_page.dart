@@ -57,6 +57,7 @@ class TrackingPage extends ConsumerStatefulWidget {
 
 class _TrackingPageState extends ConsumerState<TrackingPage> {
   DateTime _historyDate = DateTime.now();
+  FoodCategory? _selectedCategory;
 
   /// Cantidad seleccionada por alimento (key = MinsaFoodPortion.key)
   final Map<String, int> _selectedQuantity = {};
@@ -205,7 +206,57 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.xs),
+
+                    // ── Selector de categoría (dropdown) ─────────
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .outlineVariant,
+                        ),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: DropdownButton<FoodCategory?>(
+                        value: _selectedCategory,
+                        isExpanded: true,
+                        underline: const SizedBox(),
+                        hint: const Text('Filtrar por categoría...'),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('Todas las categorías'),
+                          ),
+                          ...grouped.keys.map((category) =>
+                              DropdownMenuItem(
+                                value: category,
+                                child: Row(
+                                  children: [
+                                    Icon(_categoryIcon(category), size: 18),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Text(_categoryLabel(category)),
+                                  ],
+                                ),
+                              )),
+                        ],
+                        onChanged: (category) =>
+                            setState(() => _selectedCategory = category),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Alimentos filtrados por categoría ──────────
                     ...grouped.entries.expand((entry) sync* {
+                      // Filtrar por categoría seleccionada
+                      if (_selectedCategory != null &&
+                          entry.key != _selectedCategory) {
+                        return;
+                      }
+
                       yield _CategoryHeader(category: entry.key);
                       for (final food in entry.value) {
                         final qty = _quantityFor(food.key);
@@ -272,7 +323,49 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       for (final record in records)
-                        _RecordTile(record: record),
+                        _RecordTile(
+                          record: record,
+                          onDelete: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title:
+                                    const Text('Eliminar registro'),
+                                content: Text(
+                                    '¿Deseas eliminar "${record.description}"?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(ctx, false),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(ctx, true),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed == true) {
+                              await ref
+                                  .read(trackingControllerProvider
+                                      .notifier)
+                                  .deleteRecord(record.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'Registro eliminado correctamente.'),
+                                    backgroundColor:
+                                        AppColors.success,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        ),
                     ],
                     const SizedBox(height: AppSpacing.lg),
                   ],
@@ -615,28 +708,31 @@ class _QuantityStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _StepperButton(
-          icon: Icons.remove,
-          onPressed:
-              quantity > 1 ? () => onChanged(quantity - 1) : null,
-        ),
-        Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-          child: Text(
-            '$quantity',
-            style: Theme.of(context).textTheme.titleSmall,
+    return SizedBox(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _StepperButton(
+            icon: Icons.remove,
+            onPressed:
+                quantity > 1 ? () => onChanged(quantity - 1) : null,
           ),
-        ),
-        _StepperButton(
-          icon: Icons.add,
-          onPressed:
-              quantity < _maxPortionQuantity ? () => onChanged(quantity + 1) : null,
-        ),
-      ],
+          SizedBox(
+            width: 40,
+            child: Center(
+              child: Text(
+                '$quantity',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+          ),
+          _StepperButton(
+            icon: Icons.add,
+            onPressed:
+                quantity < _maxPortionQuantity ? () => onChanged(quantity + 1) : null,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -669,8 +765,9 @@ class _StepperButton extends StatelessWidget {
 // ──────────────────────────────────────────────────────────────────────────────
 class _RecordTile extends StatelessWidget {
   final DailyRecord record;
+  final VoidCallback onDelete;
 
-  const _RecordTile({required this.record});
+  const _RecordTile({required this.record, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -687,6 +784,11 @@ class _RecordTile extends StatelessWidget {
         subtitle: Text(
           '${formatDateDdMmYyyy(record.date)} • '
           '${record.ironMg.toStringAsFixed(1)} mg',
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline, color: Colors.red),
+          onPressed: onDelete,
+          tooltip: 'Eliminar registro',
         ),
       ),
     );
@@ -750,6 +852,39 @@ class _DailyIronProgressCard extends StatelessWidget {
               missing <= 0
                   ? '¡Objetivo diario alcanzado! 🎉'
                   : 'Faltan ${missing.toStringAsFixed(1)} mg para cumplir la meta de hoy.',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withAlpha(100),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withAlpha(75),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Meta según recomendaciones MINSA basada en la edad. Consulta con el pediatra si tienes dudas.',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

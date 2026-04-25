@@ -36,3 +36,11 @@ double ironMissingMg({
   if (missing <= 0) return 0;
   return missing;
 }
+
+bool isAboveDailyGoal({
+  required double consumedMg,
+  required double goalMg,
+}) {
+  if (goalMg <= 0) return false;
+  return consumedMg >= goalMg;
+}
