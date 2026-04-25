@@ -512,29 +512,32 @@ class _FoodPortionCardState extends State<_FoodPortionCard> {
             ],
 
             // Cantidad + Hierro total
-            Row(
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.sm,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Cantidad:',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Cantidad:',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      _QuantityStepper(
-                        quantity: widget.quantity,
-                        onChanged: widget.onQuantityChanged,
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    _QuantityStepper(
+                      quantity: widget.quantity,
+                      onChanged: widget.onQuantityChanged,
+                    ),
+                  ],
                 ),
-                const Spacer(),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'Hierro aprox.',
@@ -751,6 +754,16 @@ class _DailyIronProgressCard extends StatelessWidget {
                   ? '¡Objetivo diario alcanzado! 🎉'
                   : 'Faltan ${missing.toStringAsFixed(1)} mg para cumplir la meta de hoy.',
             ),
+            if (consumedIronMg > goalIronMg) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                '⚠️ Advertencia: Has superado tu meta. No es bueno consumir tanto hierro en exceso.',
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ],
         ),
       ),
