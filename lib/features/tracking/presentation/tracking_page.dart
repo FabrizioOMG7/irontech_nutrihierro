@@ -606,26 +606,24 @@ class _FoodPortionCardState extends State<_FoodPortionCard> {
 
             // Cantidad + Hierro total
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Cantidad:',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Cantidad:',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      _QuantityStepper(
-                        quantity: widget.quantity,
-                        onChanged: widget.onQuantityChanged,
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    _QuantityStepper(
+                      quantity: widget.quantity,
+                      onChanged: widget.onQuantityChanged,
+                    ),
+                  ],
                 ),
-                const Spacer(),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -853,6 +851,38 @@ class _DailyIronProgressCard extends StatelessWidget {
                   ? '¡Objetivo diario alcanzado! 🎉'
                   : 'Faltan ${missing.toStringAsFixed(1)} mg para cumplir la meta de hoy.',
             ),
+            if (consumedIronMg > goalIronMg && goalIronMg > 0) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: Colors.red.withAlpha(25),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  border: Border.all(
+                    color: Colors.red.withAlpha(75),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      size: 16,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Advertencia: Has superado la meta diaria. Consumir hierro en exceso puede no ser saludable.',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: Colors.red[800],
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.sm),
