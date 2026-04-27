@@ -3,12 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/child.dart';
 import '../../domain/repositories/profile_repository.dart';
 
-//  1. Importamos tu nueva base de datos en RAM (Mock)
-import '../../data/repositories/profile_repository_mock.dart'; 
+//  1. Importamos tu nueva base de datos Isar
+import '../../data/repositories/local_profile_repository_impl.dart';
+import '../../../../main.dart'; // Para isarProvider
 
-//  2. Desconectamos Firebase y conectamos el Mock
+//  2. Desconectamos el Mock y conectamos Isar
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
-  return ProfileRepositoryMock(); // <-- ¡El Switch Mágico!
+  final isar = ref.watch(isarProvider);
+  return LocalProfileRepositoryImpl(isar); // <-- ¡El Switch Mágico!
 });
 
 // =====================================================================

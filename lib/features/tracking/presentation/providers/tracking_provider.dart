@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:irontech_nutrihierro/features/tracking/data/tracking_repository_mock.dart';
+import 'package:irontech_nutrihierro/features/tracking/data/repositories/local_tracking_repository_impl.dart';
 import '../../domain/daily_record.dart';
 import '../../domain/daily_records_query.dart';
 import '../../domain/monthly_records_query.dart';
 import '../../domain/tracking_repository.dart';
+import '../../../../main.dart'; // Para isarProvider
 
-// 1. Proveemos el repositorio (Con el Switch Mágico preparado para Firebase)
+// 1. Proveemos el repositorio (Con el Switch Mágico apuntando a Isar)
 final trackingRepositoryProvider = Provider<TrackingRepository>((ref) {
-  return TrackingRepositoryMock(); 
+  final isar = ref.watch(isarProvider);
+  return LocalTrackingRepositoryImpl(isar);
 });
 
 // 2. Proveedor para leer los registros de un mes específico.
