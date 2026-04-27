@@ -1,4 +1,4 @@
-import 'package:irontech_nutrihierro/core/data/local_db/d/isar_child.dart';
+import 'package:irontech_nutrihierro/core/data/local_db/models/isar_child.dart';
 import 'package:isar/isar.dart';
 
 import '../../domain/child.dart';
