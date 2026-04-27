@@ -1,13 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart'; // NUEVO: Para obtener la ruta del celular
+import 'package:isar/isar.dart'; // NUEVO: Importación de Isar
+
 import 'package:irontech_nutrihierro/core/router/app_router.dart';
 import 'package:irontech_nutrihierro/theme/app_theme.dart';
 
-void main() {
+// NUEVO: Importa tus modelos de Isar generados (Ajusta las rutas según donde los creaste)
+import 'package:irontech_nutrihierro/core/data/local_db/models/isar_child.dart';
+import 'package:irontech_nutrihierro/core/data/local_db/models/isar_daily_record.dart';
+
+// NUEVO: Creamos un Provider global para inyectar Isar
+final isarProvider = Provider<Isar>((ref) {
+  throw UnimplementedError('Isar no inicializado');
+});
+
+void main() async {
+  // 1. Asegura que Flutter esté listo antes de usar directorios nativos
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 2. Busca la carpeta de documentos del dispositivo
+  final dir = await getApplicationDocumentsDirectory();
+  
+  // 3. Abre la base de datos de Isar con tus esquemas (Schemas)
+  final isar = await Isar.open(
+    [IsarChildSchema, IsarDailyRecordSchema], // Si tienes más modelos, añádelos aquí
+    directory: dir.path,
+  );
+
   runApp(
-    const ProviderScope(
-      child: MainApp(),
+    ProviderScope(
+      // 4. Inyectamos la base de datos abierta al provider
+      overrides: [
+        isarProvider.overrideWithValue(isar),
+      ],
+      child: const MainApp(),
     ),
   );
 }
