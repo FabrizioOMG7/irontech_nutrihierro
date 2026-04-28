@@ -6,6 +6,7 @@ import '../../domain/repositories/profile_repository.dart';
 //  1. Importamos tu nueva base de datos Isar
 import '../../data/repositories/local_profile_repository_impl.dart';
 import '../../../../main.dart'; // Para isarProvider
+import '../../../tracking/presentation/providers/tracking_provider.dart'; // Para borrado en cascada
 
 //  2. Desconectamos el Mock y conectamos Isar
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
@@ -72,6 +73,20 @@ class ChildrenListNotifier extends AsyncNotifier<List<Child>> {
     state = const AsyncValue.loading();
     try {
       await ref.read(profileRepositoryProvider).saveChild(child);
+      state = AsyncValue.data(await ref.read(profileRepositoryProvider).getChildren());
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  /// Elimina el perfil y todos sus registros de seguimiento (borrado en cascada).
+  Future<void> deleteChild(String childId) async {
+    state = const AsyncValue.loading();
+    try {
+      // 1. Borrar registros de seguimiento asociados al perfil
+      await ref.read(trackingRepositoryProvider).deleteAllRecordsForChild(childId);
+      // 2. Borrar el perfil
+      await ref.read(profileRepositoryProvider).deleteChild(childId);
       state = AsyncValue.data(await ref.read(profileRepositoryProvider).getChildren());
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

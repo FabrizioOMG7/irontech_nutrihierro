@@ -15,6 +15,16 @@ class _TrackingRepositoryFake implements TrackingRepository {
   }
 
   @override
+  Future<void> deleteManyRecords(List<String> recordIds) async {
+    _records.removeWhere((r) => recordIds.contains(r.id));
+  }
+
+  @override
+  Future<void> deleteAllRecordsForChild(String childId) async {
+    _records.removeWhere((r) => r.childId == childId);
+  }
+
+  @override
   Future<List<DailyRecord>> getRecordsForChildInMonth(MonthlyRecordsQuery query) async {
     return _records
         .where((r) =>

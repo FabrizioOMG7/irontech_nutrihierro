@@ -16,4 +16,10 @@ abstract class TrackingRepository {
   
   // Elimina un registro por si hay un error
   Future<void> deleteRecord(String recordId);
+
+  // Elimina múltiples registros a la vez (borrado masivo)
+  Future<void> deleteManyRecords(List<String> recordIds);
+
+  // Elimina todos los registros asociados a un niño (para borrado en cascada)
+  Future<void> deleteAllRecordsForChild(String childId);
 }

@@ -8,9 +8,62 @@ import 'package:irontech_nutrihierro/features/profile/presentation/providers/pro
 class ProfileSettingsPage extends ConsumerWidget {
   const ProfileSettingsPage({super.key});
 
+  Future<void> _confirmDeleteProfile(BuildContext context, WidgetRef ref) async {
+    final activeChild = ref.read(activeChildProvider);
+    if (activeChild == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 36),
+        title: const Text('Eliminar perfil'),
+        content: Text(
+          '¿Estás seguro de que deseas eliminar el perfil de "${activeChild.name}"?\n\n'
+          'Se eliminarán también todos sus registros de seguimiento de hierro. '
+          'Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    await ref.read(childrenListProvider.notifier).deleteChild(activeChild.id);
+
+    if (!context.mounted) return;
+
+    // Si el perfil eliminado era el activo, limpiar el activo y redirigir al selector
+    final currentActiveId = ref.read(activeChildIdProvider);
+    if (currentActiveId == activeChild.id || currentActiveId == null) {
+      await clearActiveChildId(ref);
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Perfil de "${activeChild.name}" eliminado correctamente.'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      context.go('/profile-selector');
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final activeChild = ref.watch(activeChildProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Configuración')),
       body: ResponsiveContent(
@@ -51,6 +104,19 @@ class ProfileSettingsPage extends ConsumerWidget {
                 if (context.mounted) context.go('/profile-selector');
               },
             ),
+            if (activeChild != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              const Divider(),
+              const SizedBox(height: AppSpacing.xs),
+              _SettingsItem(
+                icon: Icons.delete_forever_outlined,
+                title: 'Eliminar perfil actual',
+                subtitle: 'Borra "${activeChild.name}" y todos sus registros de seguimiento.',
+                iconColor: AppColors.error,
+                titleColor: AppColors.error,
+                onTap: () => _confirmDeleteProfile(context, ref),
+              ),
+            ],
           ],
         ),
       ),
@@ -63,12 +129,16 @@ class _SettingsItem extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
+  final Color? iconColor;
+  final Color? titleColor;
 
   const _SettingsItem({
     required this.icon,
     required this.title,
     required this.subtitle,
     this.onTap,
+    this.iconColor,
+    this.titleColor,
   });
 
   @override
@@ -76,8 +146,8 @@ class _SettingsItem extends StatelessWidget {
     return Card(
       child: ListTile(
         contentPadding: const EdgeInsets.all(AppSpacing.md),
-        leading: Icon(icon),
-        title: Text(title),
+        leading: Icon(icon, color: iconColor),
+        title: Text(title, style: titleColor != null ? TextStyle(color: titleColor) : null),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,

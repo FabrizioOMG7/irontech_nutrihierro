@@ -62,18 +62,24 @@ class _InfoPageState extends ConsumerState<InfoPage> {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    for (final category in availableCategories)
-                      ChoiceChip(
-                        label: Text(category),
-                        selected: _selectedCategory == category,
-                        onSelected: (_) =>
-                            setState(() => _selectedCategory = category),
-                      ),
-                  ],
+                // ChoiceChips deslizables con estilo moderno
+                SizedBox(
+                  height: 44,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    itemCount: availableCategories.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.xs),
+                    itemBuilder: (context, index) {
+                      final category = availableCategories[index];
+                      final isSelected = _selectedCategory == category;
+                      return _CategoryChip(
+                        label: category,
+                        isSelected: isSelected,
+                        onTap: () => setState(() => _selectedCategory = category),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Card(
@@ -164,6 +170,56 @@ class _InfoPageState extends ConsumerState<InfoPage> {
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.outline,
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(isSelected ? 30 : 12),
+              blurRadius: isSelected ? 6 : 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : colorScheme.onSurface,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 13,
+          ),
         ),
       ),
     );

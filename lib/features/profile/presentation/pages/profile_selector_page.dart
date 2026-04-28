@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
-import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
 
 class ProfileSelectorPage extends ConsumerStatefulWidget {
@@ -35,6 +34,29 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
     }
   }
 
+  Future<bool> _confirmExit() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('¿Salir al selector?'),
+        content: const Text(
+          'Estás a punto de volver al selector de perfiles. ¿Deseas continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final activeChildId = ref.watch(activeChildIdProvider);
@@ -49,25 +71,35 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
         }
       },
       child: Scaffold(
+        backgroundColor: const Color(0xFF141414),
         appBar: AppBar(
-          title: const Text('Seleccionar perfil'),
+          backgroundColor: const Color(0xFF141414),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          title: const Text(
+            'Seleccionar perfil',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
           leading: hasNavigatorBack
               ? null
               : hasActiveChild
                   ? IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: _handleBackNavigation,
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () async {
+                        final shouldExit = await _confirmExit();
+                        if (shouldExit && mounted) _handleBackNavigation();
+                      },
                     )
                   : null,
         ),
-        body: ResponsiveContent(
-          child: AsyncValueView(
-            value: ref.watch(childrenListProvider),
-            errorPrefix: 'No se pudo cargar perfiles',
-            loadingMessage: 'Cargando perfiles...',
-            dataBuilder: (children) {
-              if (children.isEmpty) {
-                return Column(
+        body: AsyncValueView(
+          value: ref.watch(childrenListProvider),
+          errorPrefix: 'No se pudo cargar perfiles',
+          loadingMessage: 'Cargando perfiles...',
+          dataBuilder: (children) {
+            if (children.isEmpty) {
+              return Center(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const EmptyStateView(
@@ -82,49 +114,71 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
                       label: const Text('Registrar perfil'),
                     ),
                   ],
-                );
-              }
-              return ListView(
-                children: [
-                  Text(
-                    '¿Con qué perfil deseas ingresar?',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              );
+            }
+            return Column(
+              children: [
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  '¿Quién está usando la app?',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Puedes crear y cambiar entre varios perfiles sin perder su historial.',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Selecciona tu perfil para continuar',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white54,
                   ),
-                  if (hasActiveChild) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    FilledButton.icon(
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                if (hasActiveChild) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: FilledButton.icon(
                       onPressed: _handleBackNavigation,
                       icon: const Icon(Icons.home_outlined),
                       label: const Text('Volver a pantalla principal'),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.md),
-                  for (final child in children)
-                    Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text(
-                            child.name.characters.first.toUpperCase(),
-                          ),
-                        ),
-                        title: Text(child.name),
-                        subtitle: Text('Edad: ${child.formattedAge}'),
-                        trailing: child.id == activeChildId
-                            ? const Icon(Icons.check_circle, color: AppColors.success)
-                            : const Icon(Icons.chevron_right),
-                        onTap: () => _selectProfile(child.id),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 44),
                       ),
                     ),
-                  const SizedBox(height: AppSpacing.xl),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                 ],
-              );
-            },
-          ),
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.sm,
+                    ),
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 160,
+                      mainAxisExtent: 160,
+                      crossAxisSpacing: AppSpacing.md,
+                      mainAxisSpacing: AppSpacing.md,
+                    ),
+                    itemCount: children.length,
+                    itemBuilder: (context, index) {
+                      final child = children[index];
+                      final isActive = child.id == activeChildId;
+                      return _ProfileCard(
+                        name: child.name,
+                        ageLabel: child.formattedAge,
+                        isActive: isActive,
+                        onTap: () => _selectProfile(child.id),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         bottomNavigationBar: SafeArea(
           top: false,
@@ -139,12 +193,123 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () => context.push('/profile-register'),
-                icon: const Icon(Icons.add),
-                label: const Text('Añadir un nuevo perfil'),
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text(
+                  'Añadir un nuevo perfil',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white38),
+                ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ProfileCard extends StatelessWidget {
+  final String name;
+  final String ageLabel;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _ProfileCard({
+    required this.name,
+    required this.ageLabel,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = name.trim().isNotEmpty
+        ? name.trim().characters.first.toUpperCase()
+        : '?';
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: isActive
+                        ? [AppColors.primary, AppColors.secondary]
+                        : [Colors.grey.shade700, Colors.grey.shade900],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: isActive
+                      ? Border.all(color: Colors.white, width: 3)
+                      : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: isActive
+                          ? AppColors.primary.withAlpha(100)
+                          : Colors.black38,
+                      blurRadius: isActive ? 12 : 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              if (isActive)
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: AppColors.success,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFF141414), width: 2),
+                  ),
+                  child: const Icon(Icons.check, size: 12, color: Colors.white),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            ageLabel,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
