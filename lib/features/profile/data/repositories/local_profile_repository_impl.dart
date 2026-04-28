@@ -1,4 +1,5 @@
 import 'package:irontech_nutrihierro/core/data/local_db/models/isar_child.dart';
+import 'package:irontech_nutrihierro/core/data/local_db/models/isar_daily_record.dart';
 import 'package:isar/isar.dart';
 
 import '../../domain/child.dart';
@@ -41,6 +42,9 @@ class LocalProfileRepositoryImpl implements ProfileRepository {
     await isar.writeTxn(() async {
       // Alternativa a deleteByIndex: filtrar y eliminar
       await isar.isarChilds.filter().childIdEqualTo(id).deleteAll();
+
+      // Eliminar registros diarios asociados al niño
+      await isar.isarDailyRecords.filter().childIdEqualTo(id).deleteAll();
     });
   }
 }

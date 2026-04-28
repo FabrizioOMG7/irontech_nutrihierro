@@ -47,8 +47,73 @@ class ProfileSettingsPage extends ConsumerWidget {
               title: 'Salir del perfil actual',
               subtitle: 'Vuelve al selector sin borrar datos guardados.',
               onTap: () async {
-                await clearActiveChildId(ref);
-                if (context.mounted) context.go('/profile-selector');
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Salir del perfil'),
+                    content: const Text('¿Deseas salir de este perfil y volver al selector?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancelar'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Salir'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed == true) {
+                  await clearActiveChildId(ref);
+                  if (context.mounted) context.go('/profile-selector');
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _SettingsItem(
+              icon: Icons.delete_forever,
+              title: 'Eliminar perfil',
+              subtitle: 'Borra todos los datos de este niño/a de forma permanente.',
+              iconColor: Colors.red,
+              textColor: Colors.red,
+              onTap: () async {
+                final child = ref.read(activeChildProvider);
+                if (child == null) return;
+
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Eliminar perfil'),
+                    content: Text('¿Deseas eliminar permanentemente el perfil de "${child.name}" y todos sus registros? Esta acción no se puede deshacer.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancelar'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                        child: const Text('Sí, eliminar'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed == true) {
+                  await ref.read(childrenListProvider.notifier).deleteChild(child.id);
+                  await clearActiveChildId(ref);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Perfil eliminado correctamente.'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                    context.go('/profile-selector');
+                  }
+                }
               },
             ),
           ],
@@ -62,12 +127,16 @@ class _SettingsItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final Color? iconColor;
+  final Color? textColor;
   final VoidCallback? onTap;
 
   const _SettingsItem({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.iconColor,
+    this.textColor,
     this.onTap,
   });
 
@@ -76,10 +145,10 @@ class _SettingsItem extends StatelessWidget {
     return Card(
       child: ListTile(
         contentPadding: const EdgeInsets.all(AppSpacing.md),
-        leading: Icon(icon),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
+        leading: Icon(icon, color: iconColor),
+        title: Text(title, style: TextStyle(color: textColor, fontWeight: textColor != null ? FontWeight.bold : null)),
+        subtitle: Text(subtitle, style: TextStyle(color: textColor?.withAlpha(200))),
+        trailing: Icon(Icons.chevron_right, color: iconColor),
         onTap: onTap,
       ),
     );
