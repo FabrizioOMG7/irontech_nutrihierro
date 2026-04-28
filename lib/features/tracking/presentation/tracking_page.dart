@@ -59,6 +59,9 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
   DateTime _historyDate = DateTime.now();
   FoodCategory? _selectedCategory;
 
+  bool _isEditing = false;
+  final Set<String> _selectedRecords = {};
+
   /// Cantidad seleccionada por alimento (key = MinsaFoodPortion.key)
   final Map<String, int> _selectedQuantity = {};
 
@@ -131,7 +134,9 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Seguimiento de hierro')),
+      appBar: AppBar(
+        title: const Text('Seguimiento de hierro'),
+      ),
       body: AsyncValueView(
         value: childrenAsync,
         errorPrefix: 'Error al cargar perfil',
@@ -317,14 +322,104 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                             'Usa "Añadir" para registrar el consumo de hoy.',
                       )
                     else ...[
-                      Text(
-                        'Registros del día',
-                        style: Theme.of(context).textTheme.titleMedium,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Registros del día',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          IconButton(
+                            icon: Icon(_isEditing ? Icons.close : Icons.edit),
+                            onPressed: () {
+                              setState(() {
+                                _isEditing = !_isEditing;
+                                if (!_isEditing) {
+                                  _selectedRecords.clear();
+                                }
+                              });
+                            },
+                          ),
+                        ],
                       ),
+                      if (_isEditing) ...[
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: _selectedRecords.length == records.length && records.isNotEmpty,
+                              onChanged: (val) {
+                                setState(() {
+                                  if (val == true) {
+                                    _selectedRecords.addAll(records.map((r) => r.id));
+                                  } else {
+                                    _selectedRecords.clear();
+                                  }
+                                });
+                              },
+                            ),
+                            const Text('Seleccionar todos'),
+                            const Spacer(),
+                            if (_selectedRecords.isNotEmpty)
+                              FilledButton.icon(
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Eliminar registros'),
+                                      content: Text('¿Deseas eliminar los ${_selectedRecords.length} registros seleccionados?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx, false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx, true),
+                                          child: const Text('Eliminar'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed == true) {
+                                    await ref.read(trackingControllerProvider.notifier).deleteRecords(_selectedRecords.toList());
+                                    setState(() {
+                                      _selectedRecords.clear();
+                                      _isEditing = false;
+                                    });
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Registros eliminados correctamente.'),
+                                          backgroundColor: AppColors.success,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.delete, size: 18),
+                                label: Text('Eliminar (${_selectedRecords.length})'),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.xs),
                       for (final record in records)
                         _RecordTile(
                           record: record,
+                          isEditing: _isEditing,
+                          isSelected: _selectedRecords.contains(record.id),
+                          onSelectChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _selectedRecords.add(record.id);
+                              } else {
+                                _selectedRecords.remove(record.id);
+                              }
+                            });
+                          },
                           onDelete: () async {
                             final confirmed = await showDialog<bool>(
                               context: context,
@@ -763,9 +858,18 @@ class _StepperButton extends StatelessWidget {
 // ──────────────────────────────────────────────────────────────────────────────
 class _RecordTile extends StatelessWidget {
   final DailyRecord record;
+  final bool isEditing;
+  final bool isSelected;
+  final ValueChanged<bool?> onSelectChanged;
   final VoidCallback onDelete;
 
-  const _RecordTile({required this.record, required this.onDelete});
+  const _RecordTile({
+    required this.record,
+    required this.isEditing,
+    required this.isSelected,
+    required this.onSelectChanged,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -773,7 +877,12 @@ class _RecordTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: ListTile(
         minVerticalPadding: AppSpacing.sm,
-        leading: const Icon(Icons.check_circle, color: AppColors.success),
+        leading: isEditing
+            ? Checkbox(
+                value: isSelected,
+                onChanged: onSelectChanged,
+              )
+            : const Icon(Icons.check_circle, color: AppColors.success),
         title: Text(
           record.description,
           maxLines: 2,
@@ -783,11 +892,14 @@ class _RecordTile extends StatelessWidget {
           '${formatDateDdMmYyyy(record.date)} • '
           '${record.ironMg.toStringAsFixed(1)} mg',
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.red),
-          onPressed: onDelete,
-          tooltip: 'Eliminar registro',
-        ),
+        trailing: isEditing
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                onPressed: onDelete,
+                tooltip: 'Eliminar registro',
+              ),
+        onTap: isEditing ? () => onSelectChanged(!isSelected) : null,
       ),
     );
   }

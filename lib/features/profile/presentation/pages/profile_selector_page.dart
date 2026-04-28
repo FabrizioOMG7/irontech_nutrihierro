@@ -84,42 +84,102 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
                   ],
                 );
               }
-              return ListView(
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(height: AppSpacing.xl),
                   Text(
-                    '¿Con qué perfil deseas ingresar?',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    '¿Quién está usando la app?',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Puedes crear y cambiar entre varios perfiles sin perder su historial.',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    'Selecciona un perfil para continuar',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Expanded(
+                    child: Center(
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: AppSpacing.xl,
+                          mainAxisSpacing: AppSpacing.xl,
+                          childAspectRatio: 0.8,
+                        ),
+                        itemCount: children.length,
+                        itemBuilder: (context, index) {
+                          final child = children[index];
+                          final isActive = child.id == activeChildId;
+                          return GestureDetector(
+                            onTap: () => _selectProfile(child.id),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isActive
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Colors.transparent,
+                                        width: 4,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(20),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 60,
+                                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                                      child: Text(
+                                        child.name.characters.first.toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                Text(
+                                  child.name,
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                   if (hasActiveChild) ...[
-                    const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.xl),
                     FilledButton.icon(
                       onPressed: _handleBackNavigation,
                       icon: const Icon(Icons.home_outlined),
                       label: const Text('Volver a pantalla principal'),
                     ),
                   ],
-                  const SizedBox(height: AppSpacing.md),
-                  for (final child in children)
-                    Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text(
-                            child.name.characters.first.toUpperCase(),
-                          ),
-                        ),
-                        title: Text(child.name),
-                        subtitle: Text('Edad: ${child.formattedAge}'),
-                        trailing: child.id == activeChildId
-                            ? const Icon(Icons.check_circle, color: AppColors.success)
-                            : const Icon(Icons.chevron_right),
-                        onTap: () => _selectProfile(child.id),
-                      ),
-                    ),
                   const SizedBox(height: AppSpacing.xl),
                 ],
               );

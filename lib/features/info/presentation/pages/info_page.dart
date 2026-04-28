@@ -62,18 +62,41 @@ class _InfoPageState extends ConsumerState<InfoPage> {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    for (final category in availableCategories)
-                      ChoiceChip(
-                        label: Text(category),
-                        selected: _selectedCategory == category,
-                        onSelected: (_) =>
-                            setState(() => _selectedCategory = category),
-                      ),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final category in availableCategories)
+                        Padding(
+                          padding: const EdgeInsets.only(right: AppSpacing.sm),
+                          child: ChoiceChip(
+                            label: Text(category),
+                            selected: _selectedCategory == category,
+                            onSelected: (_) =>
+                                setState(() => _selectedCategory = category),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppRadius.xl),
+                            ),
+                            selectedColor: Theme.of(context).colorScheme.primary.withAlpha(50),
+                            labelStyle: TextStyle(
+                              color: _selectedCategory == category
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontWeight: _selectedCategory == category
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                            backgroundColor: Theme.of(context).colorScheme.surface,
+                            elevation: _selectedCategory == category ? 2 : 0,
+                            side: BorderSide(
+                              color: _selectedCategory == category
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.outlineVariant,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Card(
