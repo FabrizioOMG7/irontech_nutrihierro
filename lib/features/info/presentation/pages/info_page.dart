@@ -57,29 +57,90 @@ class _InfoPageState extends ConsumerState<InfoPage> {
 
             return ListView(
               children: [
-                Text(
-                  'Aprende y actúa en casa',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                // ── Encabezado ─────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: Text(
+                    'Aprende y actúa en casa',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    for (final category in availableCategories)
-                      ChoiceChip(
-                        label: Text(category),
-                        selected: _selectedCategory == category,
-                        onSelected: (_) =>
-                            setState(() => _selectedCategory = category),
+                Text(
+                  'Guías prácticas basadas en las recomendaciones del MINSA.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                  ],
                 ),
                 const SizedBox(height: AppSpacing.md),
+
+                // ── Filtros mejorados ──────────────────────────────────
+                SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: availableCategories.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(width: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      final category = availableCategories[index];
+                      final isSelected = _selectedCategory == category;
+                      return FilterChip(
+                        label: Text(category),
+                        selected: isSelected,
+                        onSelected: (_) =>
+                            setState(() => _selectedCategory = category),
+                        selectedColor: AppColors.primary.withAlpha(30),
+                        checkmarkColor: AppColors.primary,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? AppColors.primary
+                              : Theme.of(context).colorScheme.onSurface,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.normal,
+                        ),
+                        side: BorderSide(
+                          color: isSelected
+                              ? AppColors.primary
+                              : Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        showCheckmark: false,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 0,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+
+                // ── Acceso rápido: Recetas ─────────────────────────────
                 Card(
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
                   child: ListTile(
-                    leading: const Icon(Icons.restaurant_menu),
-                    title: const Text('Recetas saludables'),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xs,
+                    ),
+                    leading: Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withAlpha(15),
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                      ),
+                      child: const Icon(Icons.restaurant_menu,
+                          color: AppColors.primary),
+                    ),
+                    title: const Text(
+                      'Recetas saludables',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     subtitle: const Text(
                       'Explora y visualiza recetas locales de hierro.',
                     ),
@@ -94,9 +155,24 @@ class _InfoPageState extends ConsumerState<InfoPage> {
                 const SizedBox(height: AppSpacing.sm),
                 ...filteredArticles.map(
                   (article) => Card(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
                     child: ExpansionTile(
-                      leading: const Icon(Icons.article_outlined),
-                      title: Text(article.title),
+                      leading: Container(
+                        padding: const EdgeInsets.all(AppSpacing.xs),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(15),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        child: const Icon(Icons.article_outlined,
+                            color: AppColors.primary, size: 20),
+                      ),
+                      title: Text(
+                        article.title,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       subtitle: Text(
                         '${_inferArticleCategory(article)} • Pulsa para ver resumen',
                       ),

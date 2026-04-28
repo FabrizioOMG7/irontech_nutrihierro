@@ -16,4 +16,10 @@ abstract class TrackingRepository {
   
   // Elimina un registro por si hay un error
   Future<void> deleteRecord(String recordId);
+
+  // Elimina todos los registros de un niño en una fecha específica (borrado masivo)
+  Future<void> deleteAllRecordsForDate(String childId, DateTime date);
+
+  // Elimina todos los registros de un niño (borrado en cascada al eliminar perfil)
+  Future<void> deleteAllRecordsForChild(String childId);
 }

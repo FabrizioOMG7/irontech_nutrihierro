@@ -82,6 +82,29 @@ class LocalTrackingRepositoryImpl implements TrackingRepository {
     });
   }
 
+  @override
+  Future<void> deleteAllRecordsForDate(String childId, DateTime date) async {
+    final startDate = DateTime(date.year, date.month, date.day);
+    final endDate = startDate.add(const Duration(days: 1));
+    await isar.writeTxn(() async {
+      await isar.isarDailyRecords
+          .filter()
+          .childIdEqualTo(childId)
+          .and()
+          .dateGreaterThan(startDate, include: true)
+          .and()
+          .dateLessThan(endDate, include: false)
+          .deleteAll();
+    });
+  }
+
+  @override
+  Future<void> deleteAllRecordsForChild(String childId) async {
+    await isar.writeTxn(() async {
+      await isar.isarDailyRecords.filter().childIdEqualTo(childId).deleteAll();
+    });
+  }
+
   DailyRecord _mapToDomain(IsarDailyRecord isarRecord) {
     return DailyRecord(
       id: isarRecord.recordId,

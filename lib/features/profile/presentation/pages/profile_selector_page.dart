@@ -6,6 +6,7 @@ import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
+import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
 
 class ProfileSelectorPage extends ConsumerStatefulWidget {
   const ProfileSelectorPage({super.key});
@@ -114,9 +115,75 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
                         ),
                         title: Text(child.name),
                         subtitle: Text('Edad: ${child.formattedAge}'),
-                        trailing: child.id == activeChildId
-                            ? const Icon(Icons.check_circle, color: AppColors.success)
-                            : const Icon(Icons.chevron_right),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (child.id == activeChildId)
+                              const Icon(Icons.check_circle,
+                                  color: AppColors.success),
+                            const SizedBox(width: AppSpacing.xs),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  color: AppColors.error),
+                              tooltip: 'Eliminar perfil',
+                              onPressed: () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text(
+                                        'Eliminar perfil de ${child.name}'),
+                                    content: const Text(
+                                      'Se eliminarán el perfil y todos sus '
+                                      'registros de seguimiento. '
+                                      'Esta acción no se puede deshacer.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, false),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                      FilledButton(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, true),
+                                        child: const Text('Eliminar'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirmed == true && context.mounted) {
+                                  // Borrado en cascada: primero registros, luego perfil
+                                  await ref
+                                      .read(trackingControllerProvider
+                                          .notifier)
+                                      .deleteAllForChild(child.id);
+                                  if (!context.mounted) return;
+                                  await ref
+                                      .read(childrenListProvider.notifier)
+                                      .deleteChild(child.id);
+                                  if (!context.mounted) return;
+                                  // Si era el perfil activo, limpiar selección
+                                  if (child.id == activeChildId) {
+                                    await clearActiveChildId(ref);
+                                  }
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'Perfil de ${child.name} eliminado.'),
+                                        backgroundColor: AppColors.success,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                         onTap: () => _selectProfile(child.id),
                       ),
                     ),

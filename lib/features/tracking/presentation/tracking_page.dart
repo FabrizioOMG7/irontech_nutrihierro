@@ -80,6 +80,13 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
   DateTime _normalizedDate(DateTime date) =>
       DateTime(date.year, date.month, date.day);
 
+  bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+
   Future<void> _addPortion({
     required String childId,
     required MinsaFoodPortion food,
@@ -308,18 +315,73 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                     const SizedBox(height: AppSpacing.sm),
 
                     // ── Historial del día ─────────────────────────
-                    if (records.isEmpty)
+                    if (records.isEmpty) ...[
+                      if (_isToday(_historyDate))
+                        const _NoIntakeTodayBanner(),
                       EmptyStateView(
                         icon: Icons.calendar_month,
                         title:
                             'Sin registros en ${formatDateDdMmYyyy(_historyDate)}',
                         message:
-                            'Usa "Añadir" para registrar el consumo de hoy.',
-                      )
-                    else ...[
-                      Text(
-                        'Registros del día',
-                        style: Theme.of(context).textTheme.titleMedium,
+                            'Usa "Registrar" para registrar el consumo de hoy.',
+                      ),
+                    ] else ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Registros del día',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          TextButton.icon(
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Eliminar todos los registros'),
+                                  content: Text(
+                                    '¿Deseas eliminar todos los registros '
+                                    'del ${formatDateDdMmYyyy(_historyDate)}? '
+                                    'Esta acción no se puede deshacer.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: const Text('Cancelar'),
+                                    ),
+                                    FilledButton(
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: AppColors.error,
+                                      ),
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text('Eliminar todo'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true && context.mounted) {
+                                await ref
+                                    .read(trackingControllerProvider.notifier)
+                                    .deleteAllForDate(child.id, _historyDate);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Todos los registros del día eliminados.'),
+                                      backgroundColor: AppColors.success,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.delete_sweep_outlined,
+                                size: 18, color: AppColors.error),
+                            label: const Text(
+                              'Eliminar todo',
+                              style: TextStyle(color: AppColors.error),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       for (final record in records)
@@ -753,6 +815,54 @@ class _StepperButton extends StatelessWidget {
         iconSize: 18,
         icon: Icon(icon),
         onPressed: onPressed,
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Banner de alerta: sin ingestas hoy
+// ──────────────────────────────────────────────────────────────────────────────
+class _NoIntakeTodayBanner extends StatelessWidget {
+  const _NoIntakeTodayBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withAlpha(30),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.warning.withAlpha(100)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.notifications_active_outlined,
+              color: AppColors.warning, size: 22),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hoy no has registrado una ingesta',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.warning,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Recuerda registrar los alimentos ricos en hierro que '
+                  'consumió tu niño/a hoy.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
