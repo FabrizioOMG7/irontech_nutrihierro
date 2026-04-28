@@ -58,4 +58,28 @@ class TrackingController extends AsyncNotifier<void> {
       state = AsyncValue.error(e, stack);
     }
   }
+
+  Future<void> deleteAllForDate(String childId, DateTime date) async {
+    state = const AsyncValue.loading();
+    try {
+      await ref.read(trackingRepositoryProvider).deleteAllRecordsForDate(childId, date);
+      ref.invalidate(monthlyRecordsProvider);
+      ref.invalidate(dailyRecordsProvider);
+      state = const AsyncValue.data(null);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> deleteAllForChild(String childId) async {
+    state = const AsyncValue.loading();
+    try {
+      await ref.read(trackingRepositoryProvider).deleteAllRecordsForChild(childId);
+      ref.invalidate(monthlyRecordsProvider);
+      ref.invalidate(dailyRecordsProvider);
+      state = const AsyncValue.data(null);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
 }

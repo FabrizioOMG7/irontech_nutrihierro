@@ -77,4 +77,14 @@ class ChildrenListNotifier extends AsyncNotifier<List<Child>> {
       state = AsyncValue.error(e, stack);
     }
   }
+
+  Future<void> deleteChild(String childId) async {
+    state = const AsyncValue.loading();
+    try {
+      await ref.read(profileRepositoryProvider).deleteChild(childId);
+      state = AsyncValue.data(await ref.read(profileRepositoryProvider).getChildren());
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
 }

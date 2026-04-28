@@ -76,4 +76,24 @@ class TrackingRepositoryMock implements TrackingRepository {
     memoryDb.removeWhere((r) => r.id == recordId);
     await _writeRecords(memoryDb);
   }
+
+  @override
+  Future<void> deleteAllRecordsForDate(String childId, DateTime date) async {
+    final memoryDb = await _readRecords();
+    memoryDb.removeWhere(
+      (r) =>
+          r.childId == childId &&
+          r.date.year == date.year &&
+          r.date.month == date.month &&
+          r.date.day == date.day,
+    );
+    await _writeRecords(memoryDb);
+  }
+
+  @override
+  Future<void> deleteAllRecordsForChild(String childId) async {
+    final memoryDb = await _readRecords();
+    memoryDb.removeWhere((r) => r.childId == childId);
+    await _writeRecords(memoryDb);
+  }
 }
