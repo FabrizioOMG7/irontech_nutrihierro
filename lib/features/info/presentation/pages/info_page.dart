@@ -87,14 +87,7 @@ class _InfoPageState extends ConsumerState<InfoPage> {
                       final category = availableCategories[index];
                       final isSelected = _selectedCategory == category;
                       return FilterChip(
-                        label: Text(
-                          category,
-                          style: TextStyle(
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.normal,
-                          ),
-                        ),
+                        label: Text(category),
                         selected: isSelected,
                         onSelected: (_) =>
                             setState(() => _selectedCategory = category),
@@ -104,6 +97,9 @@ class _InfoPageState extends ConsumerState<InfoPage> {
                           color: isSelected
                               ? AppColors.primary
                               : Theme.of(context).colorScheme.onSurface,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.normal,
                         ),
                         side: BorderSide(
                           color: isSelected
