@@ -65,7 +65,6 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     name: 'Sangrecita de pollo',
     portions: [
       FoodPortionOption(label: '2 cdas (30 g)', ironMg: 8.0),
-      FoodPortionOption(label: '100 g', ironMg: 26.7),
     ],
     category: FoodCategory.organosYSangre,
     description: 'Excelente fuente de hierro hemínico. Ideal para anemia.',
@@ -75,7 +74,6 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     name: 'Sangrecita de res',
     portions: [
       FoodPortionOption(label: '2 cdas (30 g)', ironMg: 9.0),
-      FoodPortionOption(label: '100 g', ironMg: 30.0),
     ],
     category: FoodCategory.organosYSangre,
     description: 'Mayor concentración de hierro que la de pollo.',
@@ -85,7 +83,6 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     name: 'Bazo de res',
     portions: [
       FoodPortionOption(label: '2 cdas (30 g)', ironMg: 8.5),
-      FoodPortionOption(label: '100 g', ironMg: 28.3),
     ],
     category: FoodCategory.organosYSangre,
     description: 'Muy rico en hierro y vitaminas.',
@@ -95,7 +92,6 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     name: 'Hígado de res',
     portions: [
       FoodPortionOption(label: '1 porción (30 g)', ironMg: 5.8),
-      FoodPortionOption(label: '100 g', ironMg: 19.3),
     ],
     category: FoodCategory.organosYSangre,
     description: 'Rico en hierro y vitamina A.',
@@ -105,7 +101,6 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     name: 'Hígado de pollo',
     portions: [
       FoodPortionOption(label: '1 porción (30 g)', ironMg: 2.5),
-      FoodPortionOption(label: '100 g', ironMg: 8.3),
     ],
     category: FoodCategory.organosYSangre,
     description: 'Buena fuente de hierro y proteína.',
@@ -115,7 +110,6 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     name: 'Riñón de res',
     portions: [
       FoodPortionOption(label: '1 porción (30 g)', ironMg: 4.0),
-      FoodPortionOption(label: '100 g', ironMg: 13.3),
     ],
     category: FoodCategory.organosYSangre,
     description: 'Buena fuente de hierro hemínico.',
@@ -125,7 +119,6 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     name: 'Corazón de res',
     portions: [
       FoodPortionOption(label: '1 porción (30 g)', ironMg: 4.2),
-      FoodPortionOption(label: '100 g', ironMg: 14.0),
     ],
     category: FoodCategory.organosYSangre,
     description: 'Proteína magra con buen contenido de hierro.',

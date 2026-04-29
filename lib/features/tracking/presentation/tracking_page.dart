@@ -702,55 +702,66 @@ class _FoodPortionCardState extends State<_FoodPortionCard> {
             // Cantidad + Hierro total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Cantidad:',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Cantidad:',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    _QuantityStepper(
-                      quantity: widget.quantity,
-                      onChanged: widget.onQuantityChanged,
-                    ),
-                  ],
+                      const SizedBox(height: AppSpacing.xs),
+                      _QuantityStepper(
+                        quantity: widget.quantity,
+                        onChanged: widget.onQuantityChanged,
+                      ),
+                    ],
+                  ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Hierro aprox.',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withAlpha(20),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(
-                          color: AppColors.primary.withAlpha(50),
-                          width: 1,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Hierro aprox.',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      child: Text(
-                        '${ironTotal.toStringAsFixed(1)} mg',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
+                      const SizedBox(height: AppSpacing.xs),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withAlpha(20),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: AppColors.primary.withAlpha(50),
+                            width: 1,
+                          ),
+                        ),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '${ironTotal.toStringAsFixed(1)} mg',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -960,10 +971,13 @@ class _DailyIronProgressCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               missing <= 0
-                  ? '¡Objetivo diario alcanzado! 🎉'
+                  ? '¡Excelente trabajo! Has alcanzado la meta de hierro de hoy 🎉'
                   : 'Faltan ${missing.toStringAsFixed(1)} mg para cumplir la meta de hoy.',
+              style: missing <= 0
+                  ? const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)
+                  : null,
             ),
-            if (consumedIronMg > goalIronMg && goalIronMg > 0) ...[
+            if (consumedIronMg > 40.0) ...[
               const SizedBox(height: AppSpacing.sm),
               Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
@@ -985,7 +999,7 @@ class _DailyIronProgressCard extends StatelessWidget {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
-                        'Advertencia: Has superado la meta diaria. Consumir hierro en exceso puede no ser saludable.',
+                        'Precaución: Has superado el límite diario de seguridad (40 mg). Un exceso de hierro puede causar malestar estomacal. Consulta con tu pediatra si la ingesta ha sido muy alta o mediante suplementos.',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               color: Colors.red[800],
                             ),
