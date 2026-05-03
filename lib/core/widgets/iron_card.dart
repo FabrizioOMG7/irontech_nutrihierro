@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
+import 'package:irontech_nutrihierro/core/widgets/app_image_widget.dart';
 
 class IronCard extends StatelessWidget {
   final String title;
   final String description;
+  final String? imageUrl; // URL de la imagen (asset o remota)
   final Widget? trailingWidget; // Espacio flexible para etiquetas o íconos
 
   const IronCard({
     super.key,
     required this.title,
     required this.description,
+    this.imageUrl,
     this.trailingWidget,
   });
 
@@ -23,20 +26,29 @@ class IronCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Espacio para la imagen
-          Container(
-            height: 150,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
+          // Imagen o placeholder
+          if (imageUrl != null && imageUrl!.isNotEmpty)
+            AppImageWidget(
+              imageUrl: imageUrl!,
+              height: 150,
+              width: double.infinity,
+              fit: BoxFit.cover,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+            )
+          else
+            Container(
+              height: 150,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+              ),
+              child: Icon(
+                Icons.image,
+                size: 50,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-            child: Icon(
-              Icons.image,
-              size: 50,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(

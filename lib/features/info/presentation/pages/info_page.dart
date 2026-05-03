@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
+import 'package:irontech_nutrihierro/core/widgets/app_image_widget.dart';
 import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/iron_card.dart';
@@ -291,6 +292,7 @@ class InfoRecipesListPage extends ConsumerWidget {
                   child: IronCard(
                     title: recipe.title,
                     description: recipe.description,
+                    imageUrl: recipe.imageUrl,
                     trailingWidget: _RecipeIronBadge(ironContent: recipe.ironContent),
                   ),
                 );
@@ -330,30 +332,39 @@ class InfoRecipeDetailPage extends ConsumerWidget {
               children: [
                 Text(recipe.title, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: AppSpacing.md),
-                Card(
-                  child: Container(
-                    height: 180,
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
+                if (recipe.imageUrl.isNotEmpty)
+                  Card(
+                    child: AppImageWidget(
+                      imageUrl: recipe.imageUrl,
+                      height: 250,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                       borderRadius: BorderRadius.circular(AppRadius.lg),
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.restaurant_menu, size: 42),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          recipe.imageUrl.isNotEmpty
-                              ? 'Imagen referencial: ${_imageFileName(recipe.imageUrl)}'
-                              : 'Imagen referencial de la receta',
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                  )
+                else
+                  Card(
+                    child: Container(
+                      height: 180,
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      ),
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.restaurant_menu, size: 42),
+                          SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'Imagen referencial de la receta',
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
                 const SizedBox(height: AppSpacing.sm),
                 Card(
                   child: Padding(
@@ -428,17 +439,6 @@ Recipe? _findRecipeById(List<Recipe> recipes, String id) {
     if (recipe.id == id) return recipe;
   }
   return null;
-}
-
-String _imageFileName(String imageUrl) {
-  final normalized = imageUrl.replaceAll('\\', '/').trim();
-  if (normalized.isEmpty) return '';
-  final withoutTrailingSlash = normalized.endsWith('/')
-      ? normalized.substring(0, normalized.length - 1)
-      : normalized;
-  final separatorIndex = withoutTrailingSlash.lastIndexOf('/');
-  if (separatorIndex < 0) return withoutTrailingSlash;
-  return withoutTrailingSlash.substring(separatorIndex + 1);
 }
 
 String _inferArticleCategory(AnemiaInfoArticle article) {

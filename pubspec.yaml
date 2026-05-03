@@ -53,3 +53,14 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    # Imágenes de recetas organizadas por categoría de edad
+    - assets/images/recipes/age_lactancia/
+    - assets/images/recipes/age_papillas/
+    - assets/images/recipes/age_picados/
+    - assets/images/recipes/age_olla_familiar/
+    - assets/images/recipes/age_escolar/
+    
+    # Imágenes informativas sobre anemia
+    - assets/images/info/

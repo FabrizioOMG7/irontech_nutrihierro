@@ -173,6 +173,7 @@ class _NutritionPageState extends ConsumerState<NutritionPage> {
                             child: IronCard(
                               title: recipe.title,
                               description: recipe.description,
+                              imageUrl: recipe.imageUrl,
                               trailingWidget: _IronBadge(ironContent: recipe.ironContent),
                             ),
                           );

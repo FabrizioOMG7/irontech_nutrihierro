@@ -39,6 +39,7 @@ class RecommendedFoodsPage extends ConsumerWidget {
                   child: IronCard(
                     title: recipe.title,
                     description: recipe.description,
+                    imageUrl: recipe.imageUrl,
                     trailingWidget: _IronBadge(ironContent: recipe.ironContent),
                   ),
                 );
