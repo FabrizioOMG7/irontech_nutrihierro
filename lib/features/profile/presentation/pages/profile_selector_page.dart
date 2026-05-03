@@ -1,12 +1,15 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
+import 'package:irontech_nutrihierro/core/theme/theme_provider.dart';
 import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
 import 'package:irontech_nutrihierro/features/profile/domain/child.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
+import 'package:irontech_nutrihierro/theme/app_colors.dart';
 
 class ProfileSelectorPage extends ConsumerStatefulWidget {
   const ProfileSelectorPage({super.key});
@@ -50,6 +53,8 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
     final activeChildId = ref.watch(activeChildIdProvider);
     final hasNavigatorBack = Navigator.of(context).canPop();
     final hasActiveChild = ref.watch(activeChildProvider) != null;
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
 
     return PopScope(
       canPop: hasNavigatorBack,
@@ -59,6 +64,26 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
         }
       },
       child: Scaffold(
+        appBar: AppBar(
+          title: const SizedBox.shrink(),
+          elevation: 0,
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+          surfaceTintColor: Colors.transparent,
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: isDark ? const Color(0xFF121212) : Colors.white,
+            statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                isDark ? Icons.light_mode : Icons.dark_mode,
+                color: isDark ? Colors.amber[600] : Colors.indigo[700],
+              ),
+              onPressed: () => ref.read(themeModeProvider.notifier).toggleTheme(),
+              tooltip: isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro',
+            ),
+          ],
+        ),
         body: SafeArea(
           child: ResponsiveContent(
             child: AsyncValueView(
@@ -90,6 +115,14 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const SizedBox(height: AppSpacing.xl),
+                        // Logo de la app
+                        Image.asset(
+                          'assets/images/logo/logo_anemia.png',
+                          height: 140,
+                          width: 140,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
                         Text(
                           '¿Quién está usando la app?',
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -181,16 +214,6 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
                         const SizedBox(height: AppSpacing.xl),
                       ],
                     ),
-                    if (hasActiveChild && !hasNavigatorBack)
-                      Positioned(
-                        top: AppSpacing.sm,
-                        left: AppSpacing.sm,
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: _handleBackNavigation,
-                          tooltip: 'Volver',
-                        ),
-                      ),
                   ],
                 );
               },

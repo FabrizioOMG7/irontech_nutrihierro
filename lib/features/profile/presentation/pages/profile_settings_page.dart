@@ -47,12 +47,6 @@ class ProfileSettingsPage extends ConsumerWidget {
               onTap: () => context.push('/alerts'),
             ),
             _SettingsItem(
-              icon: Icons.people_alt_outlined,
-              title: 'Perfiles infantiles',
-              subtitle: 'Crear más perfiles y elegir perfil activo.',
-              onTap: () => context.push('/profile-selector'),
-            ),
-            _SettingsItem(
               icon: Icons.home_outlined,
               title: 'Ir a pantalla principal',
               subtitle: 'Regresa al inicio sin cambiar de perfil.',

@@ -50,11 +50,15 @@ dev_dependencies:
   riverpod_generator: ^2.4.0
   build_runner: ^2.4.13
   isar_generator: ^3.1.0+1
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
 
   assets:
+    # Logo de la app
+    - assets/images/logo/
+    
     # Imágenes de recetas organizadas por categoría de edad
     - assets/images/recipes/age_lactancia/
     - assets/images/recipes/age_papillas/
@@ -64,3 +68,13 @@ flutter:
     
     # Imágenes informativas sobre anemia
     - assets/images/info/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo/logo_anemia.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/images/logo/logo_anemia.png"
+    background_color: "#FFFFFF"
