@@ -524,13 +524,11 @@ class InfoDetailPage extends ConsumerWidget {
               );
             }
             return ListView(
+              padding: const EdgeInsets.all(AppSpacing.md),
               children: [
-                Text(
-                  article.title,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                ..._buildSectionCards(context, article.content),
+                _ArticleHeader(article: article),
+                const SizedBox(height: AppSpacing.lg),
+                ..._buildRichSections(context, article.content),
               ],
             );
           },
@@ -540,23 +538,231 @@ class InfoDetailPage extends ConsumerWidget {
   }
 }
 
-List<Widget> _buildSectionCards(BuildContext context, String content) {
+class _ArticleHeader extends StatelessWidget {
+  final AnemiaInfoArticle article;
+
+  const _ArticleHeader({required this.article});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    IconData iconData = Icons.article_rounded;
+    Color iconColor = colorScheme.primary;
+    Color bgColor = colorScheme.primaryContainer;
+
+    final lowerTitle = article.title.toLowerCase();
+    if (lowerTitle.contains('infantil') || lowerTitle.contains('niño')) {
+      iconData = Icons.child_care;
+      iconColor = colorScheme.tertiary;
+      bgColor = colorScheme.tertiaryContainer;
+    } else if (lowerTitle.contains('prevención') || lowerTitle.contains('recomendación')) {
+      iconData = Icons.shield_outlined;
+      iconColor = Colors.green.shade700;
+      bgColor = Colors.green.shade100;
+    } else if (lowerTitle.contains('síntoma') || lowerTitle.contains('consecuencia')) {
+      iconData = Icons.warning_amber_rounded;
+      iconColor = colorScheme.error;
+      bgColor = colorScheme.errorContainer;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: colorScheme.surface.withAlpha(150),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(iconData, size: 40, color: iconColor),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              article.title,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+List<Widget> _buildRichSections(BuildContext context, String content) {
   final sections = content
       .split('\n\n')
       .where((section) => section.trim().isNotEmpty)
       .toList(growable: false);
 
-  return [
-    for (final section in sections) ...[
-      Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Text(section, style: Theme.of(context).textTheme.bodyLarge),
+  final widgets = <Widget>[];
+
+  for (final section in sections) {
+    final lowerSection = section.toLowerCase();
+    final isHighlight = lowerSection.startsWith('tip práctico:') ||
+                        lowerSection.startsWith('qué hacer en casa:') ||
+                        lowerSection.startsWith('recomendación clave:');
+
+    if (isHighlight) {
+      widgets.add(_HighlightCard(text: section));
+    } else {
+      widgets.add(_RichSectionCard(text: section));
+    }
+    widgets.add(const SizedBox(height: AppSpacing.md));
+  }
+
+  return widgets;
+}
+
+class _HighlightCard extends StatelessWidget {
+  final String text;
+
+  const _HighlightCard({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final parts = text.split('\n');
+    final title = parts.isNotEmpty ? parts.first : '';
+    final body = parts.length > 1 ? parts.sublist(1).join('\n') : '';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: colorScheme.tertiary.withAlpha(50)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: colorScheme.tertiary),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onTertiaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (body.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              ..._parseListOrText(context, body, colorScheme.onTertiaryContainer),
+            ]
+          ],
         ),
       ),
-      const SizedBox(height: AppSpacing.sm),
-    ],
-  ];
+    );
+  }
+}
+
+class _RichSectionCard extends StatelessWidget {
+  final String text;
+
+  const _RichSectionCard({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final parts = text.split('\n');
+    final title = parts.isNotEmpty && !parts.first.trim().startsWith('•') ? parts.first : '';
+    final bodyLines = parts.isNotEmpty && !parts.first.trim().startsWith('•') ? parts.sublist(1) : parts;
+    final body = bodyLines.join('\n');
+
+    return Card(
+      elevation: 2,
+      shadowColor: colorScheme.shadow.withAlpha(50),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (title.isNotEmpty) ...[
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+            if (body.isNotEmpty) ..._parseListOrText(context, body, colorScheme.onSurface),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+List<Widget> _parseListOrText(BuildContext context, String text, Color textColor) {
+  final lines = text.split('\n');
+  final widgets = <Widget>[];
+
+  for (final line in lines) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) continue;
+
+    if (trimmed.startsWith('•')) {
+      final listText = trimmed.substring(1).trim();
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.xs, left: AppSpacing.sm),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 20,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  listText,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+          child: Text(
+            trimmed,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor),
+          ),
+        ),
+      );
+    }
+  }
+  return widgets;
 }
 
 AnemiaInfoArticle? _findArticleById(List<AnemiaInfoArticle> articles, String id) {
