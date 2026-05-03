@@ -16,8 +16,8 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # Fase 1: Enrutamiento y Estado
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   go_router: ^13.2.0
 
   # Fases 2 y 5: Firebase (Backend, Storage y DB offline-first)
@@ -37,7 +37,7 @@ dependencies:
   # Fase 6: Notificaciones Locales (Offline)
   flutter_local_notifications: ^17.1.2
   uuid: ^4.5.3
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.5
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   path_provider: ^2.1.5

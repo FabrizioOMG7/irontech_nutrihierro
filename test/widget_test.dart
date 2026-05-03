@@ -10,7 +10,10 @@ void main() {
       ),
     );
 
-    // Verificamos que la ruta inicial de selector cargue correctamente
-    expect(find.text('Seleccionar perfil'), findsOneWidget);
+    // Esperamos a que los providers asíncronos carguen el contenido mock (que inicializa vacío)
+    await tester.pumpAndSettle();
+
+    // Verificamos que la ruta inicial de selector cargue correctamente mostrando el estado de vacío
+    expect(find.text('Aún no hay perfiles'), findsOneWidget);
   });
 }

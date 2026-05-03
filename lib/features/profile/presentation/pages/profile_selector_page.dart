@@ -5,6 +5,7 @@ import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
+import 'package:irontech_nutrihierro/features/profile/domain/child.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
 
 class ProfileSelectorPage extends ConsumerStatefulWidget {
@@ -35,6 +36,15 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
     }
   }
 
+  static const List<Color> _avatarColors = [
+    Color(0xFFE50914), // Netflix Red
+    Color(0xFF0071EB), // Blue
+    Color(0xFF00B020), // Green
+    Color(0xFFF4B400), // Yellow
+    Color(0xFF8E24AA), // Purple
+    Color(0xFFE65100), // Orange
+  ];
+
   @override
   Widget build(BuildContext context) {
     final activeChildId = ref.watch(activeChildIdProvider);
@@ -43,30 +53,20 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
 
     return PopScope(
       canPop: hasNavigatorBack,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop && hasActiveChild) {
           _handleBackNavigation();
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Seleccionar perfil'),
-          leading: hasNavigatorBack
-              ? null
-              : hasActiveChild
-                  ? IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: _handleBackNavigation,
-                    )
-                  : null,
-        ),
-        body: ResponsiveContent(
-          child: AsyncValueView(
-            value: ref.watch(childrenListProvider),
-            errorPrefix: 'No se pudo cargar perfiles',
-            loadingMessage: 'Cargando perfiles...',
-            dataBuilder: (children) {
-              if (children.isEmpty) {
+        body: SafeArea(
+          child: ResponsiveContent(
+            child: AsyncValueView(
+              value: ref.watch(childrenListProvider),
+              errorPrefix: 'No se pudo cargar perfiles',
+              loadingMessage: 'Cargando perfiles...',
+              dataBuilder: (children) {
+                if (children.isEmpty) {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -84,106 +84,117 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
                   ],
                 );
               }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(
-                    '¿Quién está usando la app?',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                return Stack(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: AppSpacing.xl),
+                        Text(
+                          '¿Quién está usando la app?',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                          textAlign: TextAlign.center,
                         ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Selecciona un perfil para continuar',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Selecciona un perfil para continuar',
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                          textAlign: TextAlign.center,
                         ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Expanded(
-                    child: Center(
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: AppSpacing.xl,
-                          mainAxisSpacing: AppSpacing.xl,
-                          childAspectRatio: 0.8,
-                        ),
-                        itemCount: children.length,
-                        itemBuilder: (context, index) {
-                          final child = children[index];
-                          final isActive = child.id == activeChildId;
-                          return GestureDetector(
-                            onTap: () => _selectProfile(child.id),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: isActive
-                                            ? Theme.of(context).colorScheme.primary
-                                            : Colors.transparent,
-                                        width: 4,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withAlpha(20),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
+                        const SizedBox(height: AppSpacing.xl),
+                        Expanded(
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                              child: GridView.builder(
+                                shrinkWrap: true,
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: AppSpacing.xl,
+                                  mainAxisSpacing: AppSpacing.xl,
+                                  childAspectRatio: 0.8,
+                                ),
+                                itemCount: children.length,
+                                itemBuilder: (context, index) {
+                                  final child = children[index];
+                                  final isActive = child.id == activeChildId;
+                                  final avatarColor = _avatarColors[index % _avatarColors.length];
+
+                                  return GestureDetector(
+                                    onTap: () => _selectProfile(child.id),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Expanded(
+                                          child: AspectRatio(
+                                            aspectRatio: 1,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: avatarColor,
+                                                borderRadius: BorderRadius.circular(AppRadius.lg),
+                                                border: Border.all(
+                                                  color: isActive
+                                                      ? Theme.of(context).colorScheme.onSurface
+                                                      : Colors.transparent,
+                                                  width: 3,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withAlpha(40),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, 4),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Center(
+                                                child: Icon(
+                                                  child.gender == Gender.male ? Icons.face : Icons.face_3,
+                                                  size: 60,
+                                                  color: Colors.white.withAlpha(220),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: AppSpacing.md),
+                                        Text(
+                                          child.name,
+                                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                                              ),
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
-                                    child: CircleAvatar(
-                                      radius: 60,
-                                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                                      child: Text(
-                                        child.name.characters.first.toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 40,
-                                          fontWeight: FontWeight.bold,
-                                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                Text(
-                                  child.name,
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                                  );
+                                },
+                              ),
                             ),
-                          );
-                        },
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                      ],
+                    ),
+                    if (hasActiveChild && !hasNavigatorBack)
+                      Positioned(
+                        top: AppSpacing.sm,
+                        left: AppSpacing.sm,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: _handleBackNavigation,
+                          tooltip: 'Volver',
+                        ),
                       ),
-                    ),
-                  ),
-                  if (hasActiveChild) ...[
-                    const SizedBox(height: AppSpacing.xl),
-                    FilledButton.icon(
-                      onPressed: _handleBackNavigation,
-                      icon: const Icon(Icons.home_outlined),
-                      label: const Text('Volver a pantalla principal'),
-                    ),
                   ],
-                  const SizedBox(height: AppSpacing.xl),
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
         bottomNavigationBar: SafeArea(

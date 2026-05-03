@@ -6,6 +6,7 @@ import 'package:isar/isar.dart'; // NUEVO: Importación de Isar
 
 import 'package:irontech_nutrihierro/core/router/app_router.dart';
 import 'package:irontech_nutrihierro/theme/app_theme.dart';
+import 'package:irontech_nutrihierro/core/theme/theme_provider.dart';
 
 // NUEVO: Importa tus modelos de Isar generados (Ajusta las rutas según donde los creaste)
 import 'package:irontech_nutrihierro/core/data/local_db/models/isar_child.dart';
@@ -46,11 +47,14 @@ class MainApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterByAgeProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: 'IronTech NutriHierro',
       debugShowCheckedModeBanner: false,
+      themeMode: themeMode,
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       locale: const Locale('es', 'PE'),
       supportedLocales: const [
         Locale('es', 'PE'),

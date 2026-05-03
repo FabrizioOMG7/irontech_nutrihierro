@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
+import 'package:irontech_nutrihierro/core/theme/theme_provider.dart';
 
 class ProfileSettingsPage extends ConsumerWidget {
   const ProfileSettingsPage({super.key});
@@ -11,6 +12,8 @@ class ProfileSettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final themeMode = ref.watch(themeModeProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Configuración')),
       body: ResponsiveContent(
@@ -18,6 +21,19 @@ class ProfileSettingsPage extends ConsumerWidget {
           children: [
             Text('Ajustes del perfil', style: theme.textTheme.headlineSmall),
             const SizedBox(height: AppSpacing.md),
+            Card(
+              child: SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                secondary: const Icon(Icons.dark_mode_outlined),
+                title: const Text('Modo oscuro'),
+                subtitle: const Text('Cambiar la apariencia de la aplicación.'),
+                value: themeMode == ThemeMode.dark,
+                onChanged: (bool value) {
+                  ref.read(themeModeProvider.notifier).toggleTheme();
+                },
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             _SettingsItem(
               icon: Icons.child_care,
               title: 'Perfil del niño/a',
