@@ -19,7 +19,7 @@ App móvil IronTech NutriHierro para prevención de anemia infantil.
 4. El APK generado queda en:
    `build/app/outputs/flutter-apk/app-release.apk`
 
-Para descargarla o compartirla, copia ese archivo a tu PC/Drive/WhatsApp o instálalo en un dispositivo con:
+Para descargarlo o compartirlo, copia ese archivo a tu PC/Drive/WhatsApp o instálalo en un dispositivo con:
 `adb install build/app/outputs/flutter-apk/app-release.apk`
 
 ## UI/UX
