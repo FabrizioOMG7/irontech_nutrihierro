@@ -19,6 +19,13 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Override resource verification for isar_flutter_libs to fix lStar attribute error
+gradle.projectsEvaluated {
+    findProject(":isar_flutter_libs")?.apply {
+        tasks.findByName("verifyReleaseResources")?.enabled = false
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

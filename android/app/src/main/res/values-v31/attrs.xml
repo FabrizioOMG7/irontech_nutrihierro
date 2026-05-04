@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material Design 3 color attributes - required for isar_flutter_libs compatibility -->
+    <attr name="lStar" format="float" />
+    <attr name="aStar" format="float" />  
+    <attr name="bStar" format="float" />
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Material Design 3 color attributes - required for Material3 themes in compileSdk 35+ -->
+    <attr name="lStar" format="float" />
+    <attr name="aStar" format="float" />
+    <attr name="bStar" format="float" />
+</resources>

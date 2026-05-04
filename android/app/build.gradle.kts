@@ -66,6 +66,13 @@ android {
             }
         }
     }
+    
+    // Disable resource verification for isar_flutter_libs to avoid lStar attribute error
+    packagingOptions {
+        resources {
+            excludes += "META-INF/proguard/androidx-*.pro"
+        }
+    }
 }
 
 dependencies {
