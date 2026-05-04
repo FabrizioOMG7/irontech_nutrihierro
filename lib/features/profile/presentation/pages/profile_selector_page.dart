@@ -93,8 +93,26 @@ class _ProfileSelectorPageState extends ConsumerState<ProfileSelectorPage> {
               dataBuilder: (children) {
                 if (children.isEmpty) {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    const SizedBox(height: AppSpacing.xl),
+                    // Logo de la app
+                    Image.asset(
+                      'assets/images/logo/logo_anemia.png',
+                      height: 140,
+                      width: 140,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      'Bienvenido a IronTech',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     const EmptyStateView(
                       icon: Icons.child_care,
                       title: 'Aún no hay perfiles',
