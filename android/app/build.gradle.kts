@@ -15,9 +15,13 @@ if (hasKeystore) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
-fun requireKeystoreProperty(name: String): String =
-    keystoreProperties.getProperty(name)
+fun requireKeystoreProperty(name: String): String {
+    if (!hasKeystore) {
+        throw GradleException("Missing android/key.properties; cannot load '$name'.")
+    }
+    return keystoreProperties.getProperty(name)
         ?: throw GradleException("Missing '$name' in android/key.properties")
+}
 
 android {
     namespace = "com.uss.irontech.irontech_nutrihierro"
