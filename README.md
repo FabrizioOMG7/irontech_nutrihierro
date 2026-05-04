@@ -12,6 +12,7 @@ App móvil IronTech NutriHierro para prevención de anemia infantil.
    ```bash
    cp android/key.properties.example android/key.properties
    ```
+   La ruta `storeFile` se interpreta relativa a la carpeta `android/`.
 3. Compila el APK:
    ```bash
    flutter build apk --release
