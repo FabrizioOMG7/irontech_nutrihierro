@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.uss.irontech.irontech_nutrihierro"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -42,6 +42,16 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+// Force compatible versions with compileSdk 36 and isar
+configurations.all {
+    resolutionStrategy {
+        force("androidx.activity:activity:1.9.0")
+        force("androidx.activity:activity-ktx:1.9.0")
+        force("androidx.core:core:1.15.0")
+        force("androidx.core:core-ktx:1.15.0")
+    }
 }
 
 flutter {
