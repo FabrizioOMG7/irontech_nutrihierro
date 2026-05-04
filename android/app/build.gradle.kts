@@ -15,14 +15,6 @@ if (hasKeystore) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
-fun requireKeystoreProperty(name: String): String {
-    if (!hasKeystore) {
-        throw GradleException("Missing android/key.properties; cannot load '$name'.")
-    }
-    return keystoreProperties.getProperty(name)
-        ?: throw GradleException("Missing '$name' in android/key.properties")
-}
-
 android {
     namespace = "com.uss.irontech.irontech_nutrihierro"
     compileSdk = 36
@@ -51,6 +43,10 @@ android {
 
     signingConfigs {
         if (hasKeystore) {
+            fun requireKeystoreProperty(name: String): String =
+                keystoreProperties.getProperty(name)
+                    ?: throw GradleException("Missing '$name' in android/key.properties")
+
             create("release") {
                 keyAlias = requireKeystoreProperty("keyAlias")
                 keyPassword = requireKeystoreProperty("keyPassword")
