@@ -1,3 +1,4 @@
+import org.gradle.api.GradleException
 import java.util.Properties
 
 plugins {
@@ -13,6 +14,10 @@ val hasKeystore = keystorePropertiesFile.exists()
 if (hasKeystore) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
+
+fun requireKeystoreProperty(name: String): String =
+    keystoreProperties.getProperty(name)
+        ?: throw GradleException("Missing '$name' in android/key.properties")
 
 android {
     namespace = "com.uss.irontech.irontech_nutrihierro"
@@ -43,10 +48,10 @@ android {
     signingConfigs {
         if (hasKeystore) {
             create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = requireKeystoreProperty("keyAlias")
+                keyPassword = requireKeystoreProperty("keyPassword")
+                storeFile = rootProject.file(requireKeystoreProperty("storeFile"))
+                storePassword = requireKeystoreProperty("storePassword")
             }
         }
     }
