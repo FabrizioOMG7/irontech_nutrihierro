@@ -8,6 +8,7 @@ App móvil IronTech NutriHierro para prevención de anemia infantil.
    ```bash
    keytool -genkey -v -keystore android/app/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
    ```
+   Este comando crea el archivo en `android/app/upload-keystore.jks`.
 2. Copia el ejemplo de propiedades y ajusta las credenciales:
    ```bash
    cp android/key.properties.example android/key.properties
