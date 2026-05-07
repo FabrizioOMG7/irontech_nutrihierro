@@ -10,6 +10,7 @@ import 'package:irontech_nutrihierro/features/tracking/domain/daily_record.dart'
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_records_query.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/iron_goal.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/minsa_food_portion.dart';
+import 'package:irontech_nutrihierro/features/tracking/presentation/infant_tracking_view.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -86,6 +87,7 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
   Future<void> _addPortion({
     required String childId,
     required MinsaFoodPortion food,
+    required FoodPortionOption selectedPortion,
     required DateTime selectedDate,
     required int quantity,
   }) async {
@@ -94,9 +96,9 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
       childId: childId,
       date: _normalizedDate(selectedDate),
       sourceType: IronSourceType.food,
-      description: food.name,
+      description: '${food.name} (${selectedPortion.label})',
       wasAccepted: true,
-      ironMg: food.defaultPortion.ironMg * quantity,
+      ironMg: selectedPortion.ironMg * quantity,
     );
     await ref.read(trackingControllerProvider.notifier).addRecord(record);
   }
@@ -170,6 +172,14 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
               errorPrefix: 'Error al cargar registro',
               loadingMessage: 'Cargando historial por fecha...',
               dataBuilder: (records) {
+                if (child.ageInMonths < 6) {
+                  return InfantTrackingView(
+                    child: child,
+                    records: records,
+                    historyDate: _historyDate,
+                  );
+                }
+
                 final goalIronMg =
                     estimatedDailyIronGoalMg(child.ageInMonths);
                 final consumedIronMg = records.fold<double>(
@@ -266,16 +276,21 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                       for (final food in entry.value) {
                         final qty = _quantityFor(food.key);
                         yield _FoodPortionCard(
+                        key: ValueKey(food.key),
                           food: food,
                           quantity: qty,
                           portionsTodayCount:
-                              portionsByFood[food.name] ?? 0,
+                            portionsByFood['${food.name} (${food.defaultPortion.label})'] ??
+                            portionsByFood.entries
+                                .where((e) => e.key.startsWith(food.name))
+                                .fold<int>(0, (sum, e) => sum + e.value),
                           isSaving: trackingState.isLoading,
                           onQuantityChanged: (newQty) => setState(
                               () => _selectedQuantity[food.key] = newQty),
-                          onAddPortion: () => _addPortion(
+                        onAddPortion: (selectedPortion) => _addPortion(
                             childId: child.id,
                             food: food,
+                          selectedPortion: selectedPortion,
                             selectedDate: _historyDate,
                             quantity: qty,
                           ),
@@ -571,9 +586,10 @@ class _FoodPortionCard extends StatefulWidget {
   final int portionsTodayCount;
   final bool isSaving;
   final ValueChanged<int> onQuantityChanged;
-  final VoidCallback onAddPortion;
+  final void Function(FoodPortionOption) onAddPortion;
 
   const _FoodPortionCard({
+    super.key,
     required this.food,
     required this.quantity,
     required this.portionsTodayCount,
@@ -593,6 +609,16 @@ class _FoodPortionCardState extends State<_FoodPortionCard> {
   void initState() {
     super.initState();
     _selectedPortion = widget.food.defaultPortion;
+  }
+
+  @override
+  void didUpdateWidget(covariant _FoodPortionCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.food.key != oldWidget.food.key) {
+      _selectedPortion = widget.food.defaultPortion;
+    } else if (!widget.food.portions.contains(_selectedPortion)) {
+      _selectedPortion = widget.food.defaultPortion;
+    }
   }
 
   @override
@@ -784,7 +810,7 @@ class _FoodPortionCardState extends State<_FoodPortionCard> {
                   ),
                 const Spacer(),
                 FilledButton.icon(
-                  onPressed: widget.isSaving ? null : widget.onAddPortion,
+                  onPressed: widget.isSaving ? null : () => widget.onAddPortion(_selectedPortion),
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Registrar'),
                   style: FilledButton.styleFrom(
