@@ -6,6 +6,7 @@ import 'package:irontech_nutrihierro/core/widgets/async_value_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/empty_state_view.dart';
 import 'package:irontech_nutrihierro/core/widgets/iron_card.dart';
 import 'package:irontech_nutrihierro/core/widgets/responsive_content.dart';
+import 'package:irontech_nutrihierro/features/alerts/presentation/providers/alerts_provider.dart';
 import 'package:irontech_nutrihierro/features/nutrition/domain/recipe.dart';
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/nutrition_provider.dart';
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
@@ -69,7 +70,12 @@ class _NutritionPageState extends ConsumerState<NutritionPage> {
         title: const Text('Catálogo Nutricional'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_active),
+            icon: _NotificationIconBadge(
+              unreadCount: ref
+                  .watch(alertsProvider)
+                  .where((alert) => !alert.isRead)
+                  .length,
+            ),
             onPressed: () => context.push('/alerts'),
           ),
         ],
@@ -188,6 +194,58 @@ class _NutritionPageState extends ConsumerState<NutritionPage> {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _NotificationIconBadge extends StatelessWidget {
+  final int unreadCount;
+
+  const _NotificationIconBadge({required this.unreadCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.notifications_active),
+        if (unreadCount > 0)
+          Positioned(
+            right: -6,
+            top: -6,
+            child: _Badge(count: unreadCount),
+          ),
+      ],
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  final int count;
+  static const int _maxDisplayCount = 99;
+
+  const _Badge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final display =
+        count > _maxDisplayCount ? '$_maxDisplayCount+' : count.toString();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.error,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+      ),
+      constraints: const BoxConstraints(minWidth: 18),
+      child: Text(
+        display,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onError,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
