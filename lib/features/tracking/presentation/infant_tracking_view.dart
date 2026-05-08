@@ -541,6 +541,7 @@ DateTime _addMonths(DateTime date, int monthsToAdd) {
   final newYear = date.year + totalMonths ~/ 12;
   final newMonth = totalMonths % 12 + 1;
   final lastDayOfMonth = DateTime(newYear, newMonth + 1, 0).day;
+  // Clamp day to month end for dates like Jan 31 -> Feb 28/29.
   final newDay = date.day <= lastDayOfMonth ? date.day : lastDayOfMonth;
   return DateTime(newYear, newMonth, newDay);
 }

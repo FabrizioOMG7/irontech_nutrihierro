@@ -49,13 +49,13 @@ final supplementStreakProvider = FutureProvider.family<int, String>((ref, childI
     if (record.sourceType != IronSourceType.supplement) continue;
     if (!record.wasAccepted) continue;
     final date = DateTime(record.date.year, record.date.month, record.date.day);
-    supplementDays.add(_dateKey(date));
+    supplementDays.add(_formatDateKey(date));
   }
 
   var streak = 0;
   for (var i = 0; i < 7; i++) {
     final date = today.subtract(Duration(days: i));
-    if (supplementDays.contains(_dateKey(date))) {
+    if (supplementDays.contains(_formatDateKey(date))) {
       streak += 1;
     } else {
       break;
@@ -65,7 +65,7 @@ final supplementStreakProvider = FutureProvider.family<int, String>((ref, childI
   return streak;
 });
 
-String _dateKey(DateTime date) => '${date.year}-${date.month}-${date.day}';
+String _formatDateKey(DateTime date) => '${date.year}-${date.month}-${date.day}';
 
 // 3. Notifier para guardar nuevos registros y refrescar el calendario
 final trackingControllerProvider = AsyncNotifierProvider<TrackingController, void>(() {
