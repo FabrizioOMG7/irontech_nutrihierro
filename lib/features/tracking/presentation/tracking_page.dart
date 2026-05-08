@@ -201,11 +201,8 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                     !grouped.containsKey(_selectedCategory);
                 if (needsCategoryReset) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    if (_selectedCategory != null &&
-                        !grouped.containsKey(_selectedCategory)) {
-                      setState(() => _selectedCategory = null);
-                    }
+                    if (!mounted || !needsCategoryReset) return;
+                    setState(() => _selectedCategory = null);
                   });
                 }
                 final selectedCategory = grouped.containsKey(_selectedCategory)

@@ -1,5 +1,7 @@
 enum FoodCategory { organosYSangre, carnesYAves, legumbresYGranos, verdurasYOtros }
 
+const int _fishMinAgeMonths = 12;
+
 /// Opción de medida para un alimento
 /// Ej: '2 cdas (30g)' con 8.0 mg de hierro, o '100g' con 26.7 mg
 class FoodPortionOption {
@@ -189,7 +191,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Pescado rico en proteína y omega-3.',
-    minAgeMonths: 12,
+    minAgeMonths: _fishMinAgeMonths,
   ),
   MinsaFoodPortion(
     key: 'sardinas',
@@ -200,7 +202,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Muy rico en hierro, omega-3 y calcio.',
-    minAgeMonths: 12,
+    minAgeMonths: _fishMinAgeMonths,
   ),
   MinsaFoodPortion(
     key: 'anchoveta',
@@ -211,7 +213,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Pescado peruano rico en hierro y omega-3.',
-    minAgeMonths: 12,
+    minAgeMonths: _fishMinAgeMonths,
   ),
   MinsaFoodPortion(
     key: 'trucha',
@@ -222,7 +224,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Pescado de agua dulce con proteína de calidad.',
-    minAgeMonths: 12,
+    minAgeMonths: _fishMinAgeMonths,
   ),
   MinsaFoodPortion(
     key: 'almejas',
@@ -323,7 +325,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Pescado graso muy nutritivo.',
-    minAgeMonths: 12,
+    minAgeMonths: _fishMinAgeMonths,
   ),
   MinsaFoodPortion(
     key: 'quinua',
