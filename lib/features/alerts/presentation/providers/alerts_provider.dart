@@ -66,6 +66,36 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
       ),
     ];
 
+    if (child.prescribedDose != null && child.prescribedDose!.isNotEmpty) {
+      candidates.add(AppAlert(
+        id: _dailyAlertId(dayKey, AppAlertType.prescribedDoseReminder),
+        type: AppAlertType.prescribedDoseReminder,
+        title: 'Gotas de hierro recetadas',
+        message: 'No olvides la dosis: ${child.prescribedDose}',
+        createdAt: DateTime(
+          dayKey.year,
+          dayKey.month,
+          dayKey.day,
+          _intakeReminderHour,
+        ),
+      ));
+    }
+
+    if (child.nextCredDate != null && _dateOnly(child.nextCredDate!) == dayKey) {
+      candidates.add(AppAlert(
+        id: _dailyAlertId(dayKey, AppAlertType.credReminder),
+        type: AppAlertType.credReminder,
+        title: 'Cita médica CRED',
+        message: '¡Hoy tienes cita médica CRED!',
+        createdAt: DateTime(
+          dayKey.year,
+          dayKey.month,
+          dayKey.day,
+          _tipHour,
+        ),
+      ));
+    }
+
     final existingIds = state.map((alert) => alert.id).toSet();
     final newAlerts = candidates
         .where((alert) => !existingIds.contains(alert.id))

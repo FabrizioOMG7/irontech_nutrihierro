@@ -1,6 +1,8 @@
 enum AppAlertType {
   ironIntakeReminder,
   nutritionTip,
+  credReminder,
+  prescribedDoseReminder,
 }
 
 class AppAlert {

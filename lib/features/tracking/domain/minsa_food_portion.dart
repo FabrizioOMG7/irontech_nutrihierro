@@ -18,6 +18,7 @@ class MinsaFoodPortion {
   final List<FoodPortionOption> portions; // Múltiples opciones de medida
   final FoodCategory category;
   final String? description; // Beneficios adicionales
+  final int minAgeMonths; // Edad mínima para recomendar este alimento
 
   /// Obtener la porción recomendada (la primera en la lista)
   FoodPortionOption get defaultPortion => portions.first;
@@ -36,6 +37,7 @@ class MinsaFoodPortion {
     required this.portions,
     this.category = FoodCategory.carnesYAves,
     this.description,
+    this.minAgeMonths = 6,
   });
 
   /// Constructor simplificado para alimentos con una sola opción de medida
@@ -47,6 +49,7 @@ class MinsaFoodPortion {
     required String unit,
     FoodCategory category = FoodCategory.carnesYAves,
     String? description,
+    int minAgeMonths = 6,
   }) {
     return MinsaFoodPortion(
       key: key,
@@ -54,6 +57,7 @@ class MinsaFoodPortion {
       portions: [FoodPortionOption(label: unit, ironMg: ironMgPerUnit)],
       category: category,
       description: description,
+      minAgeMonths: minAgeMonths,
     );
   }
 }
@@ -215,6 +219,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco con altísimo contenido de hierro.',
+    minAgeMonths: 12,
   ),
   MinsaFoodPortion(
     key: 'mejillones',
@@ -225,6 +230,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco nutritivo con buen contenido de hierro.',
+    minAgeMonths: 12,
   ),
   MinsaFoodPortion(
     key: 'ostras',
@@ -235,6 +241,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco premium con hierro y minerales.',
+    minAgeMonths: 12,
   ),
   
   // ── LEGUMBRES, GRANOS Y SEMILLAS ────────────────────────────────────────
@@ -344,6 +351,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Muy rico en hierro, zinc y magnesio. Excelente snack.',
+    minAgeMonths: 12,
   ),
   MinsaFoodPortion(
     key: 'semilla_girasol',
@@ -354,6 +362,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Buena fuente de hierro y vitamina E.',
+    minAgeMonths: 12,
   ),
   
   // ── VERDURAS Y OTROS ────────────────────────────────────────────────────
