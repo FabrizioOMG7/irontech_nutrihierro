@@ -38,19 +38,41 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
     final dayKey = _dateOnly(now);
     final reminderCopy = _reminderForAge(child.ageInMonths);
     final tipCopy = _tipForAge(child.ageInMonths);
-    final candidates = <AppAlert>[
-      AppAlert(
-        id: _dailyAlertId(dayKey, AppAlertType.ironIntakeReminder),
-        type: AppAlertType.ironIntakeReminder,
-        title: reminderCopy.title,
-        message: reminderCopy.message,
-        createdAt: DateTime(
-          dayKey.year,
-          dayKey.month,
-          dayKey.day,
-          _intakeReminderHour,
+    final candidates = <AppAlert>[];
+
+    if (child.prescribedDose != null && child.prescribedDose!.trim().isNotEmpty) {
+      candidates.add(
+        AppAlert(
+          id: _dailyAlertId(dayKey, AppAlertType.dropsReminder),
+          type: AppAlertType.dropsReminder,
+          title: 'Recordatorio de gotas',
+          message: 'Recuerda darle su dosis: ${child.prescribedDose}',
+          createdAt: DateTime(
+            dayKey.year,
+            dayKey.month,
+            dayKey.day,
+            _intakeReminderHour,
+          ),
         ),
-      ),
+      );
+    } else {
+      candidates.add(
+        AppAlert(
+          id: _dailyAlertId(dayKey, AppAlertType.ironIntakeReminder),
+          type: AppAlertType.ironIntakeReminder,
+          title: reminderCopy.title,
+          message: reminderCopy.message,
+          createdAt: DateTime(
+            dayKey.year,
+            dayKey.month,
+            dayKey.day,
+            _intakeReminderHour,
+          ),
+        ),
+      );
+    }
+
+    candidates.add(
       AppAlert(
         id: _dailyAlertId(dayKey, AppAlertType.nutritionTip),
         type: AppAlertType.nutritionTip,
@@ -64,7 +86,28 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
           _tipMinute,
         ),
       ),
-    ];
+    );
+
+    if (child.nextCredDate != null) {
+      final credDate = _dateOnly(child.nextCredDate!);
+      if (credDate.isAtSameMomentAs(dayKey)) {
+        candidates.add(
+          AppAlert(
+            id: _dailyAlertId(dayKey, AppAlertType.medicalAppointment),
+            type: AppAlertType.medicalAppointment,
+            title: 'Cita Médica CRED',
+            message: '¡Hoy tienes una cita médica programada!',
+            createdAt: DateTime(
+              dayKey.year,
+              dayKey.month,
+              dayKey.day,
+              _intakeReminderHour,
+              30,
+            ),
+          ),
+        );
+      }
+    }
 
     final existingIds = state.map((alert) => alert.id).toSet();
     final newAlerts = candidates

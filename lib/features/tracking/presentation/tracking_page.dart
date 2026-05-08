@@ -188,13 +188,15 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                 );
                 final portionsByFood = _buildPortionCount(records);
 
-                // Agrupar alimentos por categoría
+                // Agrupar alimentos por categoría, filtrando por edad mínima
                 final grouped =
                     <FoodCategory, List<MinsaFoodPortion>>{};
                 for (final food in minsaFoodPortions) {
-                  grouped
-                      .putIfAbsent(food.category, () => [])
-                      .add(food);
+                  if (child.ageInMonths >= food.minAgeMonths) {
+                    grouped
+                        .putIfAbsent(food.category, () => [])
+                        .add(food);
+                  }
                 }
 
                 return ListView(
