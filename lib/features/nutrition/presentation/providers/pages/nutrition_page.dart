@@ -223,12 +223,14 @@ class _NotificationIconBadge extends StatelessWidget {
 
 class _Badge extends StatelessWidget {
   final int count;
+  static const int _maxDisplayCount = 99;
 
   const _Badge({required this.count});
 
   @override
   Widget build(BuildContext context) {
-    final display = count > 99 ? '99+' : count.toString();
+    final display =
+        count > _maxDisplayCount ? '$_maxDisplayCount+' : count.toString();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(

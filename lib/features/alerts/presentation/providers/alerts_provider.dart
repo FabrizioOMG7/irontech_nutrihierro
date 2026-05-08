@@ -76,7 +76,7 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
           type: AppAlertType.supplementDose,
           title: 'Gotas de hierro',
           message:
-              'Dosis indicada: ${child.prescribedDose}. Recuerda administrarlas hoy.',
+              'Dosis indicada: ${child.prescribedDose}. Recuerda administrar la dosis hoy.',
           createdAt: DateTime(
             dayKey.year,
             dayKey.month,
