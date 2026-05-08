@@ -245,13 +245,7 @@ class _DropsChecklistCard extends ConsumerWidget {
                   : 'Dosis no configurada (Click en perfil)'),
               subtitle: Text(hasDropsToday ? '¡Excelente! Dosis completada.' : 'Marcar al administrar.'),
               onTap: hasDropsToday ? null : () async {
-                final now = DateTime.now();
-                final isSameDay = selectedDate.year == now.year &&
-                    selectedDate.month == now.month &&
-                    selectedDate.day == now.day;
-                final normalizedDate = isSameDay
-                    ? now
-                    : DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+                final normalizedDate = _recordDateForSelection(selectedDate);
                 final record = DailyRecord(
                   id: const Uuid().v4(),
                   childId: childId,
@@ -449,7 +443,7 @@ class _CountdownToSolidsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sixMonthsDate = DateTime(birthDate.year, birthDate.month + 6, birthDate.day);
+    final sixMonthsDate = _addMonths(birthDate, 6);
     final daysLeft = sixMonthsDate.difference(DateTime.now()).inDays;
     final theme = Theme.of(context);
 
@@ -492,7 +486,7 @@ class _CountdownToSupplementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fourMonthsDate = DateTime(birthDate.year, birthDate.month + 4, birthDate.day);
+    final fourMonthsDate = _addMonths(birthDate, 4);
     final daysLeft = fourMonthsDate.difference(DateTime.now()).inDays;
     final theme = Theme.of(context);
 
@@ -526,4 +520,23 @@ class _CountdownToSupplementCard extends StatelessWidget {
       ),
     );
   }
+}
+
+DateTime _recordDateForSelection(DateTime selectedDate) {
+  final now = DateTime.now();
+  final isSameDay = selectedDate.year == now.year &&
+      selectedDate.month == now.month &&
+      selectedDate.day == now.day;
+  return isSameDay
+      ? now
+      : DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+}
+
+DateTime _addMonths(DateTime date, int monthsToAdd) {
+  final totalMonths = date.month - 1 + monthsToAdd;
+  final newYear = date.year + totalMonths ~/ 12;
+  final newMonth = totalMonths % 12 + 1;
+  final lastDayOfMonth = DateTime(newYear, newMonth + 1, 0).day;
+  final newDay = date.day <= lastDayOfMonth ? date.day : lastDayOfMonth;
+  return DateTime(newYear, newMonth, newDay);
 }
