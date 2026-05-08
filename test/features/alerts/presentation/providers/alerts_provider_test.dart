@@ -1,11 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:irontech_nutrihierro/features/alerts/presentation/providers/alerts_provider.dart';
+import 'package:irontech_nutrihierro/features/profile/domain/child.dart';
+import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
+
+Child _buildChild({DateTime? birthDate}) {
+  return Child(
+    id: 'child-1',
+    name: 'Test',
+    birthDate: birthDate ?? DateTime.now().subtract(const Duration(days: 200)),
+    gender: Gender.female,
+  );
+}
 
 void main() {
   group('alertsProvider', () {
     test('markAsRead updates unread alert state', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          activeChildProvider.overrideWithValue(_buildChild()),
+        ],
+      );
       addTearDown(container.dispose);
 
       final initialAlerts = container.read(alertsProvider);
@@ -19,6 +34,7 @@ void main() {
 
     test('ensureDailyAlerts does not duplicate same date/type alerts', () {
       final notifier = AlertsNotifier(
+        child: _buildChild(),
         nowProvider: () => DateTime(2026, 4, 20, 10),
       );
 
@@ -31,7 +47,11 @@ void main() {
     });
 
     test('clearRead removes only read alerts', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          activeChildProvider.overrideWithValue(_buildChild()),
+        ],
+      );
       addTearDown(container.dispose);
 
       final firstId = container.read(alertsProvider).first.id;

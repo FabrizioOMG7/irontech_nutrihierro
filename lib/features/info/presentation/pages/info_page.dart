@@ -11,6 +11,7 @@ import 'package:irontech_nutrihierro/features/info/domain/anemia_info_article.da
 import 'package:irontech_nutrihierro/features/info/presentation/providers/info_provider.dart';
 import 'package:irontech_nutrihierro/features/nutrition/domain/recipe.dart';
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/nutrition_provider.dart';
+import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
 
 class InfoPage extends ConsumerStatefulWidget {
   const InfoPage({super.key});
@@ -24,7 +25,12 @@ class _InfoPageState extends ConsumerState<InfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final recipeHighlightsAsync = ref.watch(allRecipesProvider);
+    final child = ref.watch(activeChildProvider);
+    final category =
+        child == null ? null : Recipe.getCategoryForMonths(child.ageInMonths);
+    final recipeHighlightsAsync = child == null
+        ? ref.watch(allRecipesProvider)
+        : ref.watch(recipesByCategoryProvider(category!));
     final articlesAsync = ref.watch(anemiaInfoArticlesProvider);
 
     return Scaffold(
@@ -267,15 +273,29 @@ class InfoRecipesListPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final child = ref.watch(activeChildProvider);
+    final category =
+        child == null ? null : Recipe.getCategoryForMonths(child.ageInMonths);
+    final recipesAsync = child == null
+        ? ref.watch(allRecipesProvider)
+        : ref.watch(recipesByCategoryProvider(category!));
+
     return Scaffold(
       appBar: AppBar(title: const Text('Recetas')),
       body: ResponsiveContent(
         child: AsyncValueView(
-          value: ref.watch(allRecipesProvider),
+          value: recipesAsync,
           errorPrefix: 'No se pudo cargar recetas',
           loadingMessage: 'Cargando recetas...',
           dataBuilder: (recipes) {
             if (recipes.isEmpty) {
+              if (category == AgeCategory.lactanciaExclusiva) {
+                return const EmptyStateView(
+                  icon: Icons.child_friendly,
+                  title: 'Lactancia exclusiva',
+                  message: 'En esta etapa se prioriza lactancia y nutrición materna.',
+                );
+              }
               return const EmptyStateView(
                 icon: Icons.restaurant_outlined,
                 title: 'Sin recetas',

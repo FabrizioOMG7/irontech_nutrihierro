@@ -133,6 +133,8 @@ class _CalendarGrid extends StatelessWidget {
     final daysInMonth = DateTime(currentMonth.year, currentMonth.month + 1, 0).day;
     final firstDayOfMonth = DateTime(currentMonth.year, currentMonth.month, 1);
     final startingWeekday = firstDayOfMonth.weekday; // 1 = Monday, 7 = Sunday
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
 
     // Suplementos days map for quick lookup
     final Map<int, bool> daysWithSupplement = {};
@@ -180,20 +182,34 @@ class _CalendarGrid extends StatelessWidget {
 
                 final dayNumber = index - startingWeekday + 2;
                 final isCompleted = daysWithSupplement[dayNumber] == true;
+                final dayDate = DateTime(currentMonth.year, currentMonth.month, dayNumber);
+                final isPast = dayDate.isBefore(normalizedToday);
+                final isMissed = !isCompleted && isPast;
+                final fillColor = isCompleted
+                    ? AppColors.success.withAlpha(40)
+                    : isMissed
+                        ? AppColors.error.withAlpha(30)
+                        : Colors.grey.withAlpha(20);
+                final borderColor = isCompleted
+                    ? AppColors.success
+                    : isMissed
+                        ? AppColors.error
+                        : Colors.grey.withAlpha(50);
+                final textColor = isMissed ? AppColors.error : Colors.grey[600];
 
                 return Container(
                   decoration: BoxDecoration(
-                    color: isCompleted ? AppColors.success.withAlpha(40) : Colors.grey.withAlpha(20),
+                    color: fillColor,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isCompleted ? AppColors.success : Colors.grey.withAlpha(50),
+                      color: borderColor,
                       width: 2,
                     ),
                   ),
                   child: Center(
                     child: isCompleted
                         ? const Icon(Icons.check, color: AppColors.success, size: 20)
-                        : Text('$dayNumber', style: TextStyle(color: Colors.grey[600])),
+                        : Text('$dayNumber', style: TextStyle(color: textColor)),
                   ),
                 );
               },
@@ -213,6 +229,18 @@ class _CalendarGrid extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 const Text('Dosis completada'),
+                const SizedBox(width: AppSpacing.md),
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withAlpha(30),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.error, width: 2),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                const Text('Olvido'),
               ],
             )
           ],

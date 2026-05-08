@@ -24,6 +24,44 @@ final dailyRecordsProvider = FutureProvider.family<List<DailyRecord>, DailyRecor
   return repository.getRecordsForChildInDate(query);
 });
 
+final supplementStreakProvider = FutureProvider.family<int, String>((ref, childId) async {
+  final repository = ref.watch(trackingRepositoryProvider);
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final startDate = today.subtract(const Duration(days: 6));
+
+  final queries = <MonthlyRecordsQuery>{
+    MonthlyRecordsQuery(childId: childId, month: today.month, year: today.year),
+    MonthlyRecordsQuery(childId: childId, month: startDate.month, year: startDate.year),
+  };
+
+  final records = <DailyRecord>[];
+  for (final query in queries) {
+    records.addAll(await repository.getRecordsForChildInMonth(query));
+  }
+
+  final supplementDays = <String>{};
+  for (final record in records) {
+    if (record.sourceType != IronSourceType.supplement) continue;
+    if (!record.wasAccepted) continue;
+    final date = DateTime(record.date.year, record.date.month, record.date.day);
+    supplementDays.add('${date.year}-${date.month}-${date.day}');
+  }
+
+  var streak = 0;
+  for (var i = 0; i < 7; i++) {
+    final date = today.subtract(Duration(days: i));
+    final key = '${date.year}-${date.month}-${date.day}';
+    if (supplementDays.contains(key)) {
+      streak += 1;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+});
+
 // 3. Notifier para guardar nuevos registros y refrescar el calendario
 final trackingControllerProvider = AsyncNotifierProvider<TrackingController, void>(() {
   return TrackingController();
