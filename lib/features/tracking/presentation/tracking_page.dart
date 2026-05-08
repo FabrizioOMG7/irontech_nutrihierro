@@ -197,6 +197,17 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                 for (final food in availableFoods) {
                   grouped.putIfAbsent(food.category, () => []).add(food);
                 }
+                final needsCategoryReset = _selectedCategory != null &&
+                    !grouped.containsKey(_selectedCategory);
+                if (needsCategoryReset) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    if (_selectedCategory != null &&
+                        !grouped.containsKey(_selectedCategory)) {
+                      setState(() => _selectedCategory = null);
+                    }
+                  });
+                }
                 final selectedCategory = grouped.containsKey(_selectedCategory)
                     ? _selectedCategory
                     : null;

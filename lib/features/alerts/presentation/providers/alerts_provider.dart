@@ -13,6 +13,7 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
   static const int _tipHour = 9;
   static const int _tipMinute = 30;
   static const int _credReminderHour = 7;
+  static const int _minSupplementAgeMonths = 4;
 
   AlertsNotifier({Child? child, DateTime Function()? nowProvider})
       : _child = child,
@@ -68,7 +69,7 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
     ];
 
     if (child.prescribedDose?.trim().isNotEmpty == true &&
-        child.ageInMonths >= 4) {
+        child.ageInMonths >= _minSupplementAgeMonths) {
       candidates.add(
         AppAlert(
           id: _dailyAlertId(dayKey, AppAlertType.supplementDose),
