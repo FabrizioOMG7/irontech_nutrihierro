@@ -18,6 +18,7 @@ class MinsaFoodPortion {
   final List<FoodPortionOption> portions; // Múltiples opciones de medida
   final FoodCategory category;
   final String? description; // Beneficios adicionales
+  final int minAgeMonths; // Edad mínima recomendada (por defecto 6 meses)
 
   /// Obtener la porción recomendada (la primera en la lista)
   FoodPortionOption get defaultPortion => portions.first;
@@ -36,6 +37,7 @@ class MinsaFoodPortion {
     required this.portions,
     this.category = FoodCategory.carnesYAves,
     this.description,
+    this.minAgeMonths = 6,
   });
 
   /// Constructor simplificado para alimentos con una sola opción de medida
@@ -47,6 +49,7 @@ class MinsaFoodPortion {
     required String unit,
     FoodCategory category = FoodCategory.carnesYAves,
     String? description,
+    int minAgeMonths = 6,
   }) {
     return MinsaFoodPortion(
       key: key,
@@ -54,6 +57,7 @@ class MinsaFoodPortion {
       portions: [FoodPortionOption(label: unit, ironMg: ironMgPerUnit)],
       category: category,
       description: description,
+      minAgeMonths: minAgeMonths,
     );
   }
 }
@@ -175,6 +179,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Pescado rico en proteína y omega-3.',
+    minAgeMonths: 12, // Evitar enlatados en menores de 1 año
   ),
   MinsaFoodPortion(
     key: 'sardinas',
@@ -215,6 +220,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco con altísimo contenido de hierro.',
+    minAgeMonths: 24, // Evitar mariscos en infantes menores de 2 años
   ),
   MinsaFoodPortion(
     key: 'mejillones',
@@ -225,6 +231,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco nutritivo con buen contenido de hierro.',
+    minAgeMonths: 24, // Evitar mariscos en infantes menores de 2 años
   ),
   MinsaFoodPortion(
     key: 'ostras',
@@ -235,6 +242,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco premium con hierro y minerales.',
+    minAgeMonths: 24, // Evitar mariscos en infantes menores de 2 años
   ),
   
   // ── LEGUMBRES, GRANOS Y SEMILLAS ────────────────────────────────────────
@@ -334,6 +342,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Grano integral con buen contenido de hierro.',
+    minAgeMonths: 12, // Mejor para mayores de 1 año
   ),
   MinsaFoodPortion(
     key: 'semilla_calabaza',
@@ -344,6 +353,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Muy rico en hierro, zinc y magnesio. Excelente snack.',
+    minAgeMonths: 24, // Riesgo de atragantamiento para infantes
   ),
   MinsaFoodPortion(
     key: 'semilla_girasol',
@@ -354,6 +364,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Buena fuente de hierro y vitamina E.',
+    minAgeMonths: 24, // Riesgo de atragantamiento para infantes
   ),
   
   // ── VERDURAS Y OTROS ────────────────────────────────────────────────────

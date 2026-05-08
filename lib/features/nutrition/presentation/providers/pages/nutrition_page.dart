@@ -11,6 +11,7 @@ import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/n
 import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_records_query.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
+import 'package:irontech_nutrihierro/features/alerts/presentation/providers/alerts_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NutritionPage extends ConsumerStatefulWidget {
@@ -64,12 +65,19 @@ class _NutritionPageState extends ConsumerState<NutritionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final alerts = ref.watch(alertsProvider);
+    final unreadCount = alerts.where((a) => !a.isRead).length;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Catálogo Nutricional'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_active),
+            icon: Badge(
+              isLabelVisible: unreadCount > 0,
+              label: Text(unreadCount.toString()),
+              child: const Icon(Icons.notifications_active),
+            ),
             onPressed: () => context.push('/alerts'),
           ),
         ],
