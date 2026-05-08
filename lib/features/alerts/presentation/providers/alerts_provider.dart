@@ -13,7 +13,7 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
   static const int _tipHour = 9;
   static const int _tipMinute = 30;
 
-  AlertsNotifier({required Child? child, DateTime Function()? nowProvider})
+  AlertsNotifier({Child? child, DateTime Function()? nowProvider})
       : _child = child,
         _nowProvider = nowProvider ?? DateTime.now,
         super(const []) {
