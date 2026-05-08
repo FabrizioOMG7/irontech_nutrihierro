@@ -444,7 +444,9 @@ class _CountdownToSolidsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sixMonthsDate = _addMonths(birthDate, 6);
-    final daysLeft = sixMonthsDate.difference(DateTime.now()).inDays;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final daysLeft = sixMonthsDate.difference(today).inDays;
     final theme = Theme.of(context);
 
     return Card(
@@ -487,7 +489,9 @@ class _CountdownToSupplementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fourMonthsDate = _addMonths(birthDate, 4);
-    final daysLeft = fourMonthsDate.difference(DateTime.now()).inDays;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final daysLeft = fourMonthsDate.difference(today).inDays;
     final theme = Theme.of(context);
 
     return Card(

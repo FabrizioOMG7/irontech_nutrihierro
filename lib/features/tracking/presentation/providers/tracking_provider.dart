@@ -30,10 +30,14 @@ final supplementStreakProvider = FutureProvider.family<int, String>((ref, childI
   final today = DateTime(now.year, now.month, now.day);
   final startDate = today.subtract(const Duration(days: 6));
 
-  final queries = <MonthlyRecordsQuery>{
+  final queries = <MonthlyRecordsQuery>[
     MonthlyRecordsQuery(childId: childId, month: today.month, year: today.year),
-    MonthlyRecordsQuery(childId: childId, month: startDate.month, year: startDate.year),
-  };
+  ];
+  if (startDate.month != today.month || startDate.year != today.year) {
+    queries.add(
+      MonthlyRecordsQuery(childId: childId, month: startDate.month, year: startDate.year),
+    );
+  }
 
   final records = <DailyRecord>[];
   for (final query in queries) {

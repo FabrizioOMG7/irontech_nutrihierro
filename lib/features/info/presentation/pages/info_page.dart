@@ -25,12 +25,8 @@ class _InfoPageState extends ConsumerState<InfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final child = ref.watch(activeChildProvider);
-    final category =
-        child == null ? null : Recipe.getCategoryForMonths(child.ageInMonths);
-    final recipeHighlightsAsync = child == null
-        ? ref.watch(allRecipesProvider)
-        : ref.watch(recipesByCategoryProvider(category!));
+    final recipeSelection = _watchRecipesForActiveChild(ref);
+    final recipeHighlightsAsync = recipeSelection.recipes;
     final articlesAsync = ref.watch(anemiaInfoArticlesProvider);
 
     return Scaffold(
@@ -268,17 +264,36 @@ class _InteractiveChecklistCardState extends State<_InteractiveChecklistCard> {
   }
 }
 
+_RecipeSelection _watchRecipesForActiveChild(WidgetRef ref) {
+  final child = ref.watch(activeChildProvider);
+  if (child == null) {
+    return _RecipeSelection(
+      recipes: ref.watch(allRecipesProvider),
+      category: null,
+    );
+  }
+  final category = Recipe.getCategoryForMonths(child.ageInMonths);
+  return _RecipeSelection(
+    recipes: ref.watch(recipesByCategoryProvider(category)),
+    category: category,
+  );
+}
+
+class _RecipeSelection {
+  final AsyncValue<List<Recipe>> recipes;
+  final AgeCategory? category;
+
+  const _RecipeSelection({required this.recipes, required this.category});
+}
+
 class InfoRecipesListPage extends ConsumerWidget {
   const InfoRecipesListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final child = ref.watch(activeChildProvider);
-    final category =
-        child == null ? null : Recipe.getCategoryForMonths(child.ageInMonths);
-    final recipesAsync = child == null
-        ? ref.watch(allRecipesProvider)
-        : ref.watch(recipesByCategoryProvider(category!));
+    final recipeSelection = _watchRecipesForActiveChild(ref);
+    final recipesAsync = recipeSelection.recipes;
+    final category = recipeSelection.category;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Recetas')),
