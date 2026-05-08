@@ -20,6 +20,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
         'name': child.name,
         'birthDate': Timestamp.fromDate(child.birthDate),
         'gender': child.gender.name,
+        if (child.prescribedDose != null) 'prescribedDose': child.prescribedDose,
+        if (child.nextCredDate != null) 'nextCredDate': Timestamp.fromDate(child.nextCredDate!),
       };
 
       await _childrenCollection.doc(child.id).set(childData);
@@ -41,6 +43,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
           name: data['name'],
           birthDate: (data['birthDate'] as Timestamp).toDate(),
           gender: genderFromStorage(data['gender'] as String?),
+          prescribedDose: data['prescribedDose'] as String?,
+          nextCredDate: data['nextCredDate'] != null ? (data['nextCredDate'] as Timestamp).toDate() : null,
         );
       }).toList();
     } catch (e) {

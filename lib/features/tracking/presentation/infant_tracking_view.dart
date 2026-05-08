@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:irontech_nutrihierro/core/theme/app_tokens.dart';
 import 'package:irontech_nutrihierro/core/utils/date_formatters.dart';
+import 'package:go_router/go_router.dart';
 import 'package:irontech_nutrihierro/features/profile/domain/child.dart';
 import 'package:irontech_nutrihierro/features/tracking/domain/daily_record.dart';
 import 'package:irontech_nutrihierro/features/tracking/presentation/providers/tracking_provider.dart';
@@ -30,19 +31,29 @@ class InfantTrackingView extends ConsumerWidget {
         _HeaderCard(childName: child.name, historyDate: historyDate),
         const SizedBox(height: AppSpacing.md),
 
-        // 1. Suplementación Preventiva
+        // 1. Cita CRED
+        if (child.nextCredDate != null) ...[
+          _CredReminderCard(nextCredDate: child.nextCredDate!),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        // 2. Suplementación Preventiva
         _DropsChecklistCard(
           childId: child.id,
           hasDropsToday: hasDropsToday,
           selectedDate: historyDate,
+          prescribedDose: child.prescribedDose,
+          onViewCalendar: () {
+            context.push('/tracking/infant-calendar');
+          },
         ),
         const SizedBox(height: AppSpacing.md),
 
-        // 2. Nutrición de la Madre
+        // 3. Nutrición de la Madre
         const _MotherDietCard(),
         const SizedBox(height: AppSpacing.md),
 
-        // 3. Signos de Alarma
+        // 4. Signos de Alarma
         const _AlarmSignsCard(),
         const SizedBox(height: AppSpacing.md),
 
@@ -88,15 +99,44 @@ class _HeaderCard extends StatelessWidget {
   }
 }
 
+class _CredReminderCard extends StatelessWidget {
+  final DateTime nextCredDate;
+
+  const _CredReminderCard({required this.nextCredDate});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final daysLeft = nextCredDate.difference(DateTime.now()).inDays;
+
+    return Card(
+      color: theme.colorScheme.tertiaryContainer.withAlpha(80),
+      child: ListTile(
+        leading: const Icon(Icons.event_available, size: 36, color: Colors.indigo),
+        title: const Text('Próxima Cita CRED'),
+        subtitle: Text(
+          'Programada para el ${formatDateDdMmYyyy(nextCredDate)}\n'
+          '${daysLeft >= 0 ? 'Faltan $daysLeft días' : 'Cita pasada'}',
+        ),
+        isThreeLine: true,
+      ),
+    );
+  }
+}
+
 class _DropsChecklistCard extends ConsumerWidget {
   final String childId;
   final bool hasDropsToday;
   final DateTime selectedDate;
+  final String? prescribedDose;
+  final VoidCallback onViewCalendar;
 
   const _DropsChecklistCard({
     required this.childId,
     required this.hasDropsToday,
     required this.selectedDate,
+    this.prescribedDose,
+    required this.onViewCalendar,
   });
 
   @override
@@ -121,9 +161,41 @@ class _DropsChecklistCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(
-              'A partir de los 4 meses (o antes si fue prematuro), el MINSA recomienda gotas de hierro diarias.',
-              style: theme.textTheme.bodyMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'A partir de los 4 meses (o antes si fue prematuro), el MINSA recomienda suplementación de hierro diaria.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_month, color: AppColors.primary),
+                  onPressed: onViewCalendar,
+                  tooltip: 'Ver calendario de hábitos',
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: Colors.amber.withAlpha(20),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                border: Border.all(color: Colors.amber.withAlpha(100)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.amber),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Esta dosis debe ser validada por tu pediatra. Nunca automediques a tu bebé.',
+                      style: theme.textTheme.labelSmall?.copyWith(color: Colors.amber[900]),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             ListTile(
@@ -139,8 +211,10 @@ class _DropsChecklistCard extends ConsumerWidget {
                 color: hasDropsToday ? AppColors.success : theme.colorScheme.onSurfaceVariant,
                 size: 32,
               ),
-              title: const Text('Gotas de hierro'),
-              subtitle: Text(hasDropsToday ? '¡Excelente! Dosis de hoy completada.' : 'Marcar al administrar la dosis de hoy.'),
+              title: Text(prescribedDose?.isNotEmpty == true
+                  ? 'Hoy: $prescribedDose'
+                  : 'Dosis no configurada (Click en perfil)'),
+              subtitle: Text(hasDropsToday ? '¡Excelente! Dosis completada.' : 'Marcar al administrar.'),
               onTap: hasDropsToday ? null : () async {
                 final normalizedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
                 final record = DailyRecord(
@@ -148,12 +222,17 @@ class _DropsChecklistCard extends ConsumerWidget {
                   childId: childId,
                   date: normalizedDate,
                   sourceType: IronSourceType.supplement,
-                  description: 'Gotas de hierro',
+                  description: prescribedDose?.isNotEmpty == true ? prescribedDose! : 'Gotas de hierro',
                   wasAccepted: true,
                   ironMg: 0.0, // Solo tracking de hábito, no de miligramos
                 );
                 await ref.read(trackingControllerProvider.notifier).addRecord(record);
               },
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              '💡 Recuerda: Dar 1 hora antes o después de la leche (para que el calcio no bloquee el hierro).',
+              style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey[700], fontStyle: FontStyle.italic),
             ),
           ],
         ),
@@ -187,8 +266,13 @@ class _MotherDietCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Durante la lactancia exclusiva, el bebé obtiene sus nutrientes de ti. ¡Asegúrate de consumir hierro!',
+              'Durante la lactancia exclusiva, el bebé obtiene sus nutrientes de ti. Tu alimentación es clave.',
               style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Consume alimentos ricos en hierro animal (sangrecita, hígado, bazo) al menos 3 veces por semana, acompañados siempre de vitamina C (limonada, naranjada) para mejorar su absorción. Evita tomar infusiones (té, manzanilla, anís) o lácteos junto con tus comidas principales.',
+              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[800]),
             ),
             const SizedBox(height: AppSpacing.md),
             Wrap(
@@ -199,7 +283,7 @@ class _MotherDietCard extends StatelessWidget {
                 _TipChip(label: 'Hígado'),
                 _TipChip(label: 'Bazo'),
                 _TipChip(label: 'Pescados oscuros'),
-                _TipChip(label: 'Limonada (Vitamina C)'),
+                _TipChip(label: 'Cítricos (Vitamina C)'),
               ],
             ),
           ],

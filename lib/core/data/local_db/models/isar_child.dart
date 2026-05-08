@@ -12,4 +12,6 @@ class IsarChild {
   late String name;
   late DateTime birthDate;
   late String gender;
+  String? prescribedDose;
+  DateTime? nextCredDate;
 }
