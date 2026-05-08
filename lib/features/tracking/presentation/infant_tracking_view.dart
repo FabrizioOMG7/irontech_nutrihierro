@@ -24,12 +24,41 @@ class InfantTrackingView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Buscar si ya hay un registro de gotas hoy
     final hasDropsToday = records.any((r) => r.sourceType == IronSourceType.supplement && r.description == 'Gotas de hierro');
+    final guardianCard = ref.watch(supplementStreakProvider(child.id)).maybeWhen(
+      data: (streak) => streak >= 7 ? _GuardianBadgeCard(streak: streak) : null,
+      orElse: () => null,
+    );
+
+    if (child.ageInMonths == 0) {
+      return ListView(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        children: [
+          _HeaderCard(childName: child.name, historyDate: historyDate),
+          const SizedBox(height: AppSpacing.md),
+          if (child.nextCredDate != null) ...[
+            _CredReminderCard(nextCredDate: child.nextCredDate!),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          const _LactationReminderCard(),
+          const SizedBox(height: AppSpacing.md),
+          const _MotherDietCard(),
+          const SizedBox(height: AppSpacing.md),
+          _CountdownToSupplementCard(birthDate: child.birthDate),
+          const SizedBox(height: AppSpacing.xl),
+        ],
+      );
+    }
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.sm),
       children: [
         _HeaderCard(childName: child.name, historyDate: historyDate),
         const SizedBox(height: AppSpacing.md),
+
+        if (guardianCard != null) ...[
+          guardianCard,
+          const SizedBox(height: AppSpacing.md),
+        ],
 
         // 1. Cita CRED
         if (child.nextCredDate != null) ...[
@@ -216,7 +245,7 @@ class _DropsChecklistCard extends ConsumerWidget {
                   : 'Dosis no configurada (Click en perfil)'),
               subtitle: Text(hasDropsToday ? '¡Excelente! Dosis completada.' : 'Marcar al administrar.'),
               onTap: hasDropsToday ? null : () async {
-                final normalizedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+                final normalizedDate = _recordDateForSelection(selectedDate);
                 final record = DailyRecord(
                   id: const Uuid().v4(),
                   childId: childId,
@@ -235,6 +264,25 @@ class _DropsChecklistCard extends ConsumerWidget {
               style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey[700], fontStyle: FontStyle.italic),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LactationReminderCard extends StatelessWidget {
+  const _LactationReminderCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      color: theme.colorScheme.primaryContainer.withAlpha(60),
+      child: ListTile(
+        leading: const Icon(Icons.child_friendly, size: 36),
+        title: const Text('Lactancia materna'),
+        subtitle: const Text(
+          'Prioriza la lactancia exclusiva a libre demanda para fortalecer las defensas y reservas de hierro.',
         ),
       ),
     );
@@ -303,6 +351,25 @@ class _TipChip extends StatelessWidget {
       label: Text(label),
       backgroundColor: Theme.of(context).colorScheme.surface,
       visualDensity: VisualDensity.compact,
+    );
+  }
+}
+
+class _GuardianBadgeCard extends StatelessWidget {
+  final int streak;
+
+  const _GuardianBadgeCard({required this.streak});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      color: theme.colorScheme.secondaryContainer.withAlpha(90),
+      child: ListTile(
+        leading: const Icon(Icons.emoji_events, color: Colors.amber, size: 36),
+        title: const Text('Medalla de Guardián'),
+        subtitle: Text('¡$streak días seguidos registrando la dosis!'),
+      ),
     );
   }
 }
@@ -376,8 +443,10 @@ class _CountdownToSolidsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sixMonthsDate = DateTime(birthDate.year, birthDate.month + 6, birthDate.day);
-    final daysLeft = sixMonthsDate.difference(DateTime.now()).inDays;
+    final sixMonthsDate = _addMonths(birthDate, 6);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final daysLeft = sixMonthsDate.difference(today).inDays;
     final theme = Theme.of(context);
 
     return Card(
@@ -410,4 +479,69 @@ class _CountdownToSolidsCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CountdownToSupplementCard extends StatelessWidget {
+  final DateTime birthDate;
+
+  const _CountdownToSupplementCard({required this.birthDate});
+
+  @override
+  Widget build(BuildContext context) {
+    final fourMonthsDate = _addMonths(birthDate, 4);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final daysLeft = fourMonthsDate.difference(today).inDays;
+    final theme = Theme.of(context);
+
+    return Card(
+      color: theme.colorScheme.tertiaryContainer.withAlpha(100),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              'Inicio de hierro preventivo',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              daysLeft > 0
+                  ? 'Faltan $daysLeft días para iniciar las gotas de hierro.'
+                  : '¡Es momento de iniciar las gotas de hierro según indicación médica!',
+              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Consulta con tu pediatra para definir la dosis exacta según el MINSA.',
+              style: theme.textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+DateTime _recordDateForSelection(DateTime selectedDate) {
+  final now = DateTime.now();
+  final isSameDay = selectedDate.year == now.year &&
+      selectedDate.month == now.month &&
+      selectedDate.day == now.day;
+  return isSameDay
+      ? now
+      : DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+}
+
+DateTime _addMonths(DateTime date, int monthsToAdd) {
+  final totalMonths = date.month - 1 + monthsToAdd;
+  final newYear = date.year + totalMonths ~/ 12;
+  final newMonth = totalMonths % 12 + 1;
+  final lastDayOfMonth = DateTime(newYear, newMonth + 1, 0).day;
+  // Clamp day to month end for dates like Jan 31 -> Feb 28/29.
+  final newDay = date.day <= lastDayOfMonth ? date.day : lastDayOfMonth;
+  return DateTime(newYear, newMonth, newDay);
 }

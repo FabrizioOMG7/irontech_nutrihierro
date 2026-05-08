@@ -11,6 +11,7 @@ import 'package:irontech_nutrihierro/features/info/domain/anemia_info_article.da
 import 'package:irontech_nutrihierro/features/info/presentation/providers/info_provider.dart';
 import 'package:irontech_nutrihierro/features/nutrition/domain/recipe.dart';
 import 'package:irontech_nutrihierro/features/nutrition/presentation/providers/nutrition_provider.dart';
+import 'package:irontech_nutrihierro/features/profile/presentation/providers/profile_provider.dart';
 
 class InfoPage extends ConsumerStatefulWidget {
   const InfoPage({super.key});
@@ -24,7 +25,8 @@ class _InfoPageState extends ConsumerState<InfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final recipeHighlightsAsync = ref.watch(allRecipesProvider);
+    final recipeSelection = _watchRecipesForActiveChild(ref);
+    final recipeHighlightsAsync = recipeSelection.recipes;
     final articlesAsync = ref.watch(anemiaInfoArticlesProvider);
 
     return Scaffold(
@@ -262,20 +264,53 @@ class _InteractiveChecklistCardState extends State<_InteractiveChecklistCard> {
   }
 }
 
+_RecipeSelection _watchRecipesForActiveChild(WidgetRef ref) {
+  final child = ref.watch(activeChildProvider);
+  if (child == null) {
+    return _RecipeSelection(
+      recipes: ref.watch(allRecipesProvider),
+      category: null,
+    );
+  }
+  final category = Recipe.getCategoryForMonths(child.ageInMonths);
+  return _RecipeSelection(
+    recipes: ref.watch(recipesByCategoryProvider(category)),
+    category: category,
+  );
+}
+
+class _RecipeSelection {
+  final AsyncValue<List<Recipe>> recipes;
+  final AgeCategory? category;
+
+  const _RecipeSelection({required this.recipes, required this.category});
+}
+
 class InfoRecipesListPage extends ConsumerWidget {
   const InfoRecipesListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final recipeSelection = _watchRecipesForActiveChild(ref);
+    final recipesAsync = recipeSelection.recipes;
+    final category = recipeSelection.category;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Recetas')),
       body: ResponsiveContent(
         child: AsyncValueView(
-          value: ref.watch(allRecipesProvider),
+          value: recipesAsync,
           errorPrefix: 'No se pudo cargar recetas',
           loadingMessage: 'Cargando recetas...',
           dataBuilder: (recipes) {
             if (recipes.isEmpty) {
+              if (category == AgeCategory.lactanciaExclusiva) {
+                return const EmptyStateView(
+                  icon: Icons.child_friendly,
+                  title: 'Lactancia exclusiva',
+                  message: 'En esta etapa se prioriza lactancia y nutrición materna.',
+                );
+              }
               return const EmptyStateView(
                 icon: Icons.restaurant_outlined,
                 title: 'Sin recetas',
