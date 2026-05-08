@@ -36,6 +36,16 @@ const IsarChildSchema = CollectionSchema(
       id: 3,
       name: r'name',
       type: IsarType.string,
+    ),
+    r'nextCredDate': PropertySchema(
+      id: 4,
+      name: r'nextCredDate',
+      type: IsarType.dateTime,
+    ),
+    r'prescribedDose': PropertySchema(
+      id: 5,
+      name: r'prescribedDose',
+      type: IsarType.string,
     )
   },
   estimateSize: _isarChildEstimateSize,
@@ -75,6 +85,12 @@ int _isarChildEstimateSize(
   bytesCount += 3 + object.childId.length * 3;
   bytesCount += 3 + object.gender.length * 3;
   bytesCount += 3 + object.name.length * 3;
+  {
+    final value = object.prescribedDose;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -88,6 +104,8 @@ void _isarChildSerialize(
   writer.writeString(offsets[1], object.childId);
   writer.writeString(offsets[2], object.gender);
   writer.writeString(offsets[3], object.name);
+  writer.writeDateTime(offsets[4], object.nextCredDate);
+  writer.writeString(offsets[5], object.prescribedDose);
 }
 
 IsarChild _isarChildDeserialize(
@@ -102,6 +120,8 @@ IsarChild _isarChildDeserialize(
   object.gender = reader.readString(offsets[2]);
   object.isarId = id;
   object.name = reader.readString(offsets[3]);
+  object.nextCredDate = reader.readDateTimeOrNull(offsets[4]);
+  object.prescribedDose = reader.readStringOrNull(offsets[5]);
   return object;
 }
 
@@ -120,6 +140,10 @@ P _isarChildDeserializeProp<P>(
       return (reader.readString(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 5:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -817,6 +841,233 @@ extension IsarChildQueryFilter
       ));
     });
   }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      nextCredDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'nextCredDate',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      nextCredDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'nextCredDate',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition> nextCredDateEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nextCredDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      nextCredDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'nextCredDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      nextCredDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'nextCredDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition> nextCredDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'nextCredDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'prescribedDose',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'prescribedDose',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'prescribedDose',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'prescribedDose',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'prescribedDose',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'prescribedDose',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'prescribedDose',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'prescribedDose',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'prescribedDose',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'prescribedDose',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'prescribedDose',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterFilterCondition>
+      prescribedDoseIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'prescribedDose',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension IsarChildQueryObject
@@ -871,6 +1122,30 @@ extension IsarChildQuerySortBy on QueryBuilder<IsarChild, IsarChild, QSortBy> {
   QueryBuilder<IsarChild, IsarChild, QAfterSortBy> sortByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterSortBy> sortByNextCredDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextCredDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterSortBy> sortByNextCredDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextCredDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterSortBy> sortByPrescribedDose() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prescribedDose', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterSortBy> sortByPrescribedDoseDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prescribedDose', Sort.desc);
     });
   }
 }
@@ -936,6 +1211,30 @@ extension IsarChildQuerySortThenBy
       return query.addSortBy(r'name', Sort.desc);
     });
   }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterSortBy> thenByNextCredDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextCredDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterSortBy> thenByNextCredDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextCredDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterSortBy> thenByPrescribedDose() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prescribedDose', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QAfterSortBy> thenByPrescribedDoseDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'prescribedDose', Sort.desc);
+    });
+  }
 }
 
 extension IsarChildQueryWhereDistinct
@@ -964,6 +1263,20 @@ extension IsarChildQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QDistinct> distinctByNextCredDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'nextCredDate');
+    });
+  }
+
+  QueryBuilder<IsarChild, IsarChild, QDistinct> distinctByPrescribedDose(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'prescribedDose',
+          caseSensitive: caseSensitive);
     });
   }
 }
@@ -997,6 +1310,18 @@ extension IsarChildQueryProperty
   QueryBuilder<IsarChild, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<IsarChild, DateTime?, QQueryOperations> nextCredDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'nextCredDate');
+    });
+  }
+
+  QueryBuilder<IsarChild, String?, QQueryOperations> prescribedDoseProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'prescribedDose');
     });
   }
 }

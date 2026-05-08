@@ -57,7 +57,9 @@ class _ChildProfileForm extends ConsumerStatefulWidget {
 class _ChildProfileFormState extends ConsumerState<_ChildProfileForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
+  late final TextEditingController _prescribedDoseController;
   late DateTime _selectedDate;
+  DateTime? _nextCredDate;
   late Gender _selectedGender;
   bool _isSaving = false;
 
@@ -65,13 +67,16 @@ class _ChildProfileFormState extends ConsumerState<_ChildProfileForm> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.child.name);
+    _prescribedDoseController = TextEditingController(text: widget.child.prescribedDose ?? '');
     _selectedDate = widget.child.birthDate;
+    _nextCredDate = widget.child.nextCredDate;
     _selectedGender = widget.child.gender;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _prescribedDoseController.dispose();
     super.dispose();
   }
 
@@ -88,6 +93,19 @@ class _ChildProfileFormState extends ConsumerState<_ChildProfileForm> {
     }
   }
 
+  Future<void> _pickCredDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _nextCredDate ?? now,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(now.year + 2, 12, 31),
+    );
+    if (picked != null) {
+      setState(() => _nextCredDate = picked);
+    }
+  }
+
   Future<void> _save() async {
     if (_isSaving) return;
     if (!_formKey.currentState!.validate()) return;
@@ -98,6 +116,8 @@ class _ChildProfileFormState extends ConsumerState<_ChildProfileForm> {
       name: _nameController.text.trim(),
       birthDate: _selectedDate,
       gender: _selectedGender,
+      prescribedDose: _prescribedDoseController.text.trim().isNotEmpty ? _prescribedDoseController.text.trim() : null,
+      nextCredDate: _nextCredDate,
     );
 
     try {
@@ -165,6 +185,32 @@ class _ChildProfileFormState extends ConsumerState<_ChildProfileForm> {
                 onSelected: (_) => setState(() => _selectedGender = Gender.female),
               ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          const Divider(),
+          const SizedBox(height: AppSpacing.md),
+          const Text('Datos Médicos', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+          const SizedBox(height: AppSpacing.sm),
+          TextFormField(
+            controller: _prescribedDoseController,
+            decoration: const InputDecoration(
+              labelText: 'Prescripción Médica de Hierro',
+              hintText: 'Ej: 6 gotas de Sulfato Ferroso',
+              prefixIcon: Icon(Icons.medical_information_outlined),
+              helperText: 'Copia exactamente lo que recetó tu pediatra',
+              helperMaxLines: 2,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Card(
+            child: ListTile(
+              onTap: _pickCredDate,
+              leading: const Icon(Icons.event_available_outlined),
+              title: Text(_nextCredDate == null
+                  ? 'Próxima Cita CRED'
+                  : 'Cita CRED: ${_formatDate(_nextCredDate!)}'),
+              trailing: const Icon(Icons.arrow_drop_down),
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           ElevatedButton.icon(

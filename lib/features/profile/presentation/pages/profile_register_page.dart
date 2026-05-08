@@ -18,13 +18,16 @@ class ProfileRegisterPage extends ConsumerStatefulWidget {
 class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _prescribedDoseController = TextEditingController();
   DateTime? _selectedDate;
+  DateTime? _nextCredDate;
   Gender _selectedGender = Gender.male;
   bool _isSaving = false;
 
   @override
   void dispose() {
     _nameController.dispose();
+    _prescribedDoseController.dispose();
     super.dispose();
   }
 
@@ -37,6 +40,17 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
       lastDate: now,
     );
     if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  Future<void> _pickCredDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _nextCredDate ?? now,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(now.year + 2, 12, 31),
+    );
+    if (picked != null) setState(() => _nextCredDate = picked);
   }
 
   Future<void> _saveForm() async {
@@ -57,6 +71,8 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
         name: _nameController.text.trim(),
         birthDate: _selectedDate!,
         gender: _selectedGender,
+        prescribedDose: _prescribedDoseController.text.trim().isNotEmpty ? _prescribedDoseController.text.trim() : null,
+        nextCredDate: _nextCredDate,
       );
 
       setState(() => _isSaving = true);
@@ -124,6 +140,36 @@ class _ProfileRegisterPageState extends ConsumerState<ProfileRegisterPage> {
               _GenderSelector(
                 selectedGender: _selectedGender,
                 onChanged: (value) => setState(() => _selectedGender = value),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const Divider(),
+              const SizedBox(height: AppSpacing.md),
+              const Text(
+                'Datos Médicos (Opcional)',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              TextFormField(
+                controller: _prescribedDoseController,
+                decoration: const InputDecoration(
+                  labelText: 'Prescripción Médica de Hierro',
+                  hintText: 'Ej: 6 gotas de Sulfato Ferroso',
+                  prefixIcon: Icon(Icons.medical_information_outlined),
+                  helperText: 'Copia exactamente lo que recetó tu pediatra',
+                  helperMaxLines: 2,
+                ),
+                textInputAction: TextInputAction.done,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.event_available_outlined),
+                  title: Text(_nextCredDate == null
+                      ? 'Próxima Cita CRED'
+                      : 'Cita CRED: ${_formatDate(_nextCredDate!)}'),
+                  trailing: const Icon(Icons.arrow_drop_down),
+                  onTap: _pickCredDate,
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
               ElevatedButton(

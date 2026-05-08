@@ -13,6 +13,8 @@ import 'package:irontech_nutrihierro/features/tracking/presentation/tracking_pag
 // Importamos tus pantallas y el layout
 import '../../features/profile/presentation/pages/profile_register_page.dart';
 import '../widgets/main_layout.dart'; // <-- El cascarón que acabamos de crear
+import '../../features/profile/presentation/providers/profile_provider.dart';
+import '../../features/tracking/presentation/infant_habit_calendar_page.dart';
 
 final appRouterByAgeProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -90,6 +92,17 @@ final appRouterByAgeProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/tracking',
                 builder: (context, state) => const TrackingPage(),
+                routes: [
+                  GoRoute(
+                    path: 'infant-calendar',
+                    builder: (context, state) {
+                      final child = ref.read(activeChildProvider);
+                      // Si no hay niño, por seguridad mandamos a tracking que lo maneja
+                      if (child == null) return const TrackingPage();
+                      return InfantHabitCalendarPage(child: child);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

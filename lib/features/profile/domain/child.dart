@@ -19,12 +19,16 @@ class Child {
   final String name;
   final DateTime birthDate;
   final Gender gender;
+  final String? prescribedDose;
+  final DateTime? nextCredDate;
 
   Child({
     required this.id,
     required this.name,
     required this.birthDate,
     required this.gender,
+    this.prescribedDose,
+    this.nextCredDate,
   });
 
   Map<String, dynamic> toJson() {
@@ -33,6 +37,8 @@ class Child {
       'name': name,
       'birthDate': birthDate.toIso8601String(),
       'gender': gender.name,
+      'prescribedDose': prescribedDose,
+      'nextCredDate': nextCredDate?.toIso8601String(),
     };
   }
 
@@ -42,6 +48,10 @@ class Child {
       name: json['name'] as String,
       birthDate: DateTime.parse(json['birthDate'] as String),
       gender: genderFromStorage(json['gender'] as String?),
+      prescribedDose: json['prescribedDose'] as String?,
+      nextCredDate: json['nextCredDate'] != null
+          ? DateTime.parse(json['nextCredDate'] as String)
+          : null,
     );
   }
 

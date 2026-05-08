@@ -16,7 +16,9 @@ class LocalProfileRepositoryImpl implements ProfileRepository {
       ..childId = child.id
       ..name = child.name
       ..birthDate = child.birthDate
-      ..gender = child.gender.name; // Convertimos Gender a String
+      ..gender = child.gender.name // Convertimos Gender a String
+      ..prescribedDose = child.prescribedDose
+      ..nextCredDate = child.nextCredDate;
 
     await isar.writeTxn(() async {
       // Alternativa a putByIndex: eliminar si existe y luego agregar
@@ -34,6 +36,8 @@ class LocalProfileRepositoryImpl implements ProfileRepository {
       name: isarChild.name,
       birthDate: isarChild.birthDate,
       gender: genderFromStorage(isarChild.gender), // Convertimos String a Gender
+      prescribedDose: isarChild.prescribedDose,
+      nextCredDate: isarChild.nextCredDate,
     )).toList();
   }
 
