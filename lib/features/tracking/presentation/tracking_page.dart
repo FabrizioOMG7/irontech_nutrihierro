@@ -188,14 +188,18 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                 );
                 final portionsByFood = _buildPortionCount(records);
 
+                final availableFoods = minsaFoodPortions
+                    .where((food) => food.isAllowedForAge(child.ageInMonths))
+                    .toList();
+
                 // Agrupar alimentos por categoría
-                final grouped =
-                    <FoodCategory, List<MinsaFoodPortion>>{};
-                for (final food in minsaFoodPortions) {
-                  grouped
-                      .putIfAbsent(food.category, () => [])
-                      .add(food);
+                final grouped = <FoodCategory, List<MinsaFoodPortion>>{};
+                for (final food in availableFoods) {
+                  grouped.putIfAbsent(food.category, () => []).add(food);
                 }
+                final selectedCategory = grouped.containsKey(_selectedCategory)
+                    ? _selectedCategory
+                    : null;
 
                 return ListView(
                   padding: const EdgeInsets.all(AppSpacing.sm),
@@ -222,82 +226,91 @@ class _TrackingPageState extends ConsumerState<TrackingPage> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
 
-                    // ── Selector de categoría (dropdown) ─────────
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outlineVariant,
+                    if (availableFoods.isEmpty)
+                      const EmptyStateView(
+                        icon: Icons.restaurant_menu,
+                        title: 'Sin alimentos para esta etapa',
+                        message:
+                            'Actualiza la edad del perfil para ver recomendaciones personalizadas.',
+                      )
+                    else ...[
+                      // ── Selector de categoría (dropdown) ─────────
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
                         ),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                      ),
-                      child: DropdownButton<FoodCategory?>(
-                        value: _selectedCategory,
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        hint: const Text('Filtrar por categoría...'),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('Todas las categorías'),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant,
                           ),
-                          ...grouped.keys.map((category) =>
-                              DropdownMenuItem(
-                                value: category,
-                                child: Row(
-                                  children: [
-                                    Icon(_categoryIcon(category), size: 18),
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Text(_categoryLabel(category)),
-                                  ],
-                                ),
-                              )),
-                        ],
-                        onChanged: (category) =>
-                            setState(() => _selectedCategory = category),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                        child: DropdownButton<FoodCategory?>(
+                          value: selectedCategory,
+                          isExpanded: true,
+                          underline: const SizedBox(),
+                          hint: const Text('Filtrar por categoría...'),
+                          items: [
+                            const DropdownMenuItem(
+                              value: null,
+                              child: Text('Todas las categorías'),
+                            ),
+                            ...grouped.keys.map((category) =>
+                                DropdownMenuItem(
+                                  value: category,
+                                  child: Row(
+                                    children: [
+                                      Icon(_categoryIcon(category), size: 18),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Text(_categoryLabel(category)),
+                                    ],
+                                  ),
+                                )),
+                          ],
+                          onChanged: (category) =>
+                              setState(() => _selectedCategory = category),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
 
-                    // ── Alimentos filtrados por categoría ──────────
-                    ...grouped.entries.expand((entry) sync* {
-                      // Filtrar por categoría seleccionada
-                      if (_selectedCategory != null &&
-                          entry.key != _selectedCategory) {
-                        return;
-                      }
+                      // ── Alimentos filtrados por categoría ──────────
+                      ...grouped.entries.expand((entry) sync* {
+                        // Filtrar por categoría seleccionada
+                        if (selectedCategory != null &&
+                            entry.key != selectedCategory) {
+                          return;
+                        }
 
-                      yield _CategoryHeader(category: entry.key);
-                      for (final food in entry.value) {
-                        final qty = _quantityFor(food.key);
-                        yield _FoodPortionCard(
-                        key: ValueKey(food.key),
-                          food: food,
-                          quantity: qty,
-                          portionsTodayCount:
-                            portionsByFood['${food.name} (${food.defaultPortion.label})'] ??
-                            portionsByFood.entries
-                                .where((e) => e.key.startsWith(food.name))
-                                .fold<int>(0, (sum, e) => sum + e.value),
-                          isSaving: trackingState.isLoading,
-                          onQuantityChanged: (newQty) => setState(
-                              () => _selectedQuantity[food.key] = newQty),
-                        onAddPortion: (selectedPortion) => _addPortion(
-                            childId: child.id,
+                        yield _CategoryHeader(category: entry.key);
+                        for (final food in entry.value) {
+                          final qty = _quantityFor(food.key);
+                          yield _FoodPortionCard(
+                            key: ValueKey(food.key),
                             food: food,
-                          selectedPortion: selectedPortion,
-                            selectedDate: _historyDate,
                             quantity: qty,
-                          ),
-                        );
-                      }
-                      yield const SizedBox(height: AppSpacing.xs);
-                    }),
+                            portionsTodayCount:
+                                portionsByFood['${food.name} (${food.defaultPortion.label})'] ??
+                                    portionsByFood.entries
+                                        .where((e) => e.key.startsWith(food.name))
+                                        .fold<int>(0, (sum, e) => sum + e.value),
+                            isSaving: trackingState.isLoading,
+                            onQuantityChanged: (newQty) => setState(
+                                () => _selectedQuantity[food.key] = newQty),
+                            onAddPortion: (selectedPortion) => _addPortion(
+                              childId: child.id,
+                              food: food,
+                              selectedPortion: selectedPortion,
+                              selectedDate: _historyDate,
+                              quantity: qty,
+                            ),
+                          );
+                        }
+                        yield const SizedBox(height: AppSpacing.xs);
+                      }),
+                    ],
 
                     // ── Aviso legal ───────────────────────────────
                     Card(

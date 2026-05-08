@@ -18,6 +18,8 @@ class MinsaFoodPortion {
   final List<FoodPortionOption> portions; // Múltiples opciones de medida
   final FoodCategory category;
   final String? description; // Beneficios adicionales
+  final int minAgeMonths;
+  final int? maxAgeMonths;
 
   /// Obtener la porción recomendada (la primera en la lista)
   FoodPortionOption get defaultPortion => portions.first;
@@ -36,7 +38,15 @@ class MinsaFoodPortion {
     required this.portions,
     this.category = FoodCategory.carnesYAves,
     this.description,
+    this.minAgeMonths = 6,
+    this.maxAgeMonths,
   });
+
+  bool isAllowedForAge(int ageInMonths) {
+    if (ageInMonths < minAgeMonths) return false;
+    if (maxAgeMonths == null) return true;
+    return ageInMonths <= maxAgeMonths!;
+  }
 
   /// Constructor simplificado para alimentos con una sola opción de medida
   /// (para retrocompatibilidad)
@@ -47,6 +57,8 @@ class MinsaFoodPortion {
     required String unit,
     FoodCategory category = FoodCategory.carnesYAves,
     String? description,
+    int minAgeMonths = 6,
+    int? maxAgeMonths,
   }) {
     return MinsaFoodPortion(
       key: key,
@@ -54,6 +66,8 @@ class MinsaFoodPortion {
       portions: [FoodPortionOption(label: unit, ironMg: ironMgPerUnit)],
       category: category,
       description: description,
+      minAgeMonths: minAgeMonths,
+      maxAgeMonths: maxAgeMonths,
     );
   }
 }
@@ -175,6 +189,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Pescado rico en proteína y omega-3.',
+    minAgeMonths: 12,
   ),
   MinsaFoodPortion(
     key: 'sardinas',
@@ -185,6 +200,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Muy rico en hierro, omega-3 y calcio.',
+    minAgeMonths: 12,
   ),
   MinsaFoodPortion(
     key: 'anchoveta',
@@ -195,6 +211,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Pescado peruano rico en hierro y omega-3.',
+    minAgeMonths: 12,
   ),
   MinsaFoodPortion(
     key: 'trucha',
@@ -205,6 +222,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Pescado de agua dulce con proteína de calidad.',
+    minAgeMonths: 12,
   ),
   MinsaFoodPortion(
     key: 'almejas',
@@ -215,6 +233,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco con altísimo contenido de hierro.',
+    minAgeMonths: 24,
   ),
   MinsaFoodPortion(
     key: 'mejillones',
@@ -225,6 +244,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco nutritivo con buen contenido de hierro.',
+    minAgeMonths: 24,
   ),
   MinsaFoodPortion(
     key: 'ostras',
@@ -235,6 +255,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.carnesYAves,
     description: 'Marisco premium con hierro y minerales.',
+    minAgeMonths: 24,
   ),
   
   // ── LEGUMBRES, GRANOS Y SEMILLAS ────────────────────────────────────────
@@ -302,6 +323,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Pescado graso muy nutritivo.',
+    minAgeMonths: 12,
   ),
   MinsaFoodPortion(
     key: 'quinua',
@@ -344,6 +366,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Muy rico en hierro, zinc y magnesio. Excelente snack.',
+    minAgeMonths: 24,
   ),
   MinsaFoodPortion(
     key: 'semilla_girasol',
@@ -354,6 +377,7 @@ const List<MinsaFoodPortion> minsaFoodPortions = [
     ],
     category: FoodCategory.legumbresYGranos,
     description: 'Buena fuente de hierro y vitamina E.',
+    minAgeMonths: 24,
   ),
   
   // ── VERDURAS Y OTROS ────────────────────────────────────────────────────

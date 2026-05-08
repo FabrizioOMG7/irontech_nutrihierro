@@ -12,6 +12,7 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
   static const int _intakeReminderHour = 8;
   static const int _tipHour = 9;
   static const int _tipMinute = 30;
+  static const int _credReminderHour = 7;
 
   AlertsNotifier({Child? child, DateTime Function()? nowProvider})
       : _child = child,
@@ -65,6 +66,46 @@ class AlertsNotifier extends StateNotifier<List<AppAlert>> {
         ),
       ),
     ];
+
+    if (child.prescribedDose?.trim().isNotEmpty == true &&
+        child.ageInMonths >= 4) {
+      candidates.add(
+        AppAlert(
+          id: _dailyAlertId(dayKey, AppAlertType.supplementDose),
+          type: AppAlertType.supplementDose,
+          title: 'Gotas de hierro',
+          message:
+              'Dosis indicada: ${child.prescribedDose}. Recuerda administrarlas hoy.',
+          createdAt: DateTime(
+            dayKey.year,
+            dayKey.month,
+            dayKey.day,
+            _intakeReminderHour,
+          ),
+        ),
+      );
+    }
+
+    if (child.nextCredDate != null) {
+      final credDay = _dateOnly(child.nextCredDate!);
+      if (credDay == dayKey) {
+        candidates.add(
+          AppAlert(
+            id: _dailyAlertId(dayKey, AppAlertType.credAppointment),
+            type: AppAlertType.credAppointment,
+            title: 'Cita CRED hoy',
+            message:
+                'Tienes una cita médica programada para hoy. Lleva su cartilla y preguntas.',
+            createdAt: DateTime(
+              dayKey.year,
+              dayKey.month,
+              dayKey.day,
+              _credReminderHour,
+            ),
+          ),
+        );
+      }
+    }
 
     final existingIds = state.map((alert) => alert.id).toSet();
     final newAlerts = candidates
